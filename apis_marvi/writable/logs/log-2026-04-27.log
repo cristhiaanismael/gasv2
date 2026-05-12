@@ -1,0 +1,42 @@
+CRITICAL - 2026-04-27 02:24:56 --> ParseError: syntax error, unexpected identifier "cargo", expecting ")"
+[Method: GET, Route: api/historial/edificio/198]
+in APPPATH\Models\DepartamentoModel.php on line 49.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\marvifet_inn\\apis_marvi\\app\\Models\\DepartamentoModel.php')
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\DepartamentoModel')
+ 3 APPPATH\Controllers\Historial.php(33): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\DepartamentoModel')
+ 4 SYSTEMPATH\CodeIgniter.php(921): App\Controllers\Historial->__construct()
+ 5 SYSTEMPATH\CodeIgniter.php(488): CodeIgniter\CodeIgniter->createController()
+ 6 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-04-27 02:25:00 --> ParseError: syntax error, unexpected identifier "cargo", expecting ")"
+[Method: GET, Route: api/historial/edificio/198]
+in APPPATH\Models\DepartamentoModel.php on line 49.
+ 1 SYSTEMPATH\Autoloader\Autoloader.php(295): CodeIgniter\Autoloader\Autoloader->includeFile('C:\\xampp\\htdocs\\marvifet_inn\\apis_marvi\\app\\Models\\DepartamentoModel.php')
+ 2 SYSTEMPATH\Autoloader\Autoloader.php(271): CodeIgniter\Autoloader\Autoloader->loadInNamespace('App\\Models\\DepartamentoModel')
+ 3 APPPATH\Controllers\Historial.php(33): CodeIgniter\Autoloader\Autoloader->loadClass('App\\Models\\DepartamentoModel')
+ 4 SYSTEMPATH\CodeIgniter.php(921): App\Controllers\Historial->__construct()
+ 5 SYSTEMPATH\CodeIgniter.php(488): CodeIgniter\CodeIgniter->createController()
+ 6 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-04-27 03:31:35 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-27 03:34:25 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/walmart.png]
+ERROR - 2026-04-27 03:44:35 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/banorte.png]
+ERROR - 2026-04-27 03:47:05 --> [Historial] ERROR DE ENVÍO AUTOMÁTICO: El cliente no tiene un correo electrónico válido registrado.
+INFO - 2026-04-27 03:52:55 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 03:56:02 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 03:58:25 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:00:15 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:02:58 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:03:20 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:07:21 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:08:02 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:11:25 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:13:28 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:34:36 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:51:16 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 04:52:35 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-27 05:02:17 --> [Historial] PDF Regenerado: recibo_gas_1039_26-03-2026_26-04-2026.pdf borrado para recreación.

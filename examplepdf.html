@@ -1,0 +1,631 @@
+<style type="text/css">
+    <!--
+    div.minifiche {
+        position: relative;
+        overflow: hidden;
+        width: 454px;
+        height: 138px;
+        padding: 0;
+        font-size: 11px;
+        text-align: left;
+        font-weight: normal;
+    }
+
+    div.minifiche img.icone {
+        position: absolute;
+        border: none;
+        left: 5px;
+        top: 5px;
+        width: 240px;
+        height: 128px;
+        overflow: hidden;
+    }
+
+    div.minifiche div.zone1 {
+        position: absolute;
+        border: none;
+        left: 257px;
+        top: 8px;
+        width: 188px;
+        height: 14px;
+        padding-top: 1px;
+        overflow: hidden;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    div.minifiche div.zone2 {
+        position: absolute;
+        border: none;
+        left: 315px;
+        top: 28px;
+        width: 131px;
+        height: 14px;
+        padding-top: 1px;
+        overflow: hidden;
+        text-align: left;
+        font-weight: normal;
+    }
+
+    div.minifiche div.zone3 {
+        position: absolute;
+        border: none;
+        left: 315px;
+        top: 48px;
+        width: 131px;
+        height: 14px;
+        padding-top: 1px;
+        overflow: hidden;
+        text-align: left;
+        font-weight: normal;
+    }
+
+    div.minifiche div.zone4 {
+        position: absolute;
+        border: none;
+        left: 315px;
+        top: 68px;
+        width: 131px;
+        height: 14px;
+        padding-top: 1px;
+        overflow: hidden;
+        text-align: left;
+        font-weight: normal;
+    }
+
+    div.minifiche div.zone5 {
+        position: absolute;
+        border: none;
+        left: 315px;
+        top: 88px;
+        width: 131px;
+        height: 14px;
+        padding-top: 1px;
+        overflow: hidden;
+        text-align: left;
+        font-weight: normal;
+    }
+
+    div.minifiche div.download {
+        position: absolute;
+        border: none;
+        left: 257px;
+        top: 108px;
+        width: 188px;
+        height: 22px;
+        overflow: hidden;
+        text-align: center;
+        font-weight: normal;
+    }
+    -->
+</style>
+
+<page>
+
+
+    <table style="width: 100%" border="0 ">
+        <tr>
+            <td style="border: solid 0px #007700; width: 20%;  ">
+                <img src="<?=img.'logo.jpg' ?>" height="90" width="170">
+            </td>
+            <td style="  width: 50%; ">
+                <p style="margin-top: -31">Calle:
+                    <?=$fila_empresa['calle']?> , Colonia:
+                    <?=$fila_empresa['colonia']?>, Codigo Postal:
+                    <?=$fila_empresa['codigo_postal']?>, Delegacion:
+                    <?=$fila_empresa['delegacion']?>
+                </p>
+                <div style="width: 78%">
+                    <hr>
+                </div>
+                <?=$fila_empresa['giro']?>
+            </td>
+            <td style=" width: 30%">
+                <p style="margin-top: ">
+                    <img src="<?=img.'whats.jpg' ?>" height="20" width="30">
+
+                    Tel:
+                    <?=$fila_empresa['telefono']?>
+                </p>
+                <p style="margin-top: -8">
+                    Email:
+                    <?=$fila_empresa['email']?>
+                </p>
+                <p style="margin-top: -8">
+                    Web:
+                    <?=$fila_empresa['web']?>
+                </p>
+                <h3>
+                    Folio:
+                    <?=$data['folio']?>
+
+                </h3>
+
+            </td>
+        </tr>
+    </table>
+
+
+    <table style="width: 100%" border="0">
+        <tr>
+            <td style=" width: 60%" bgcolor="#D5D9FA">
+                <p>
+                    <strong>Cliente:</strong>
+                    <?=$data['cliente']['nombre'].' '. $data['cliente']['ape_pat'].' '. $data['cliente']['ape_mat'] ?>
+                </p>
+                <p style="margin-top: -8">
+                    <strong>Domicilio:</strong>
+                    <?=$data['cliente']['calle']?>
+                </p>
+                <p style="margin-top: -8">
+                    Colonia:
+                    <?=$data['cliente']['colonia']?> Edif:
+                    <?=$data['cliente']['num_edificio']?> Depto:
+                    <?=$data['cliente']['num_departamento']?>
+                </p>
+                <p style="margin-top: -8;">
+                    <strong>Convenio:</strong>
+                    <?=$data['cliente']['convenio']?> &nbsp; &nbsp;&nbsp;
+                    <strong>Referencia:</strong>
+                    <?=$data['cliente']['referencia']?> <br><br>
+                </p>
+            </td>
+            <td colspan="2" style=" width: 40%" bgcolor="#88CDFF">
+                <strong>Total a pagar:</strong> &nbsp; &nbsp;&nbsp; $
+                <?=number_format(round($data['lectura']['total_a_pagar'],2), 2, ',', ' ')?><br>
+                <strong>Periodo :</strong> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                <?php
+                        $mes1=substr($data['lectura']['periodo'], 3, 2);
+                        $mes2=substr($data['lectura']['periodo'], -7, 2);
+                        $mes_l1=letra_mes2($mes1);  
+                        $mes_l2=letra_mes2($mes2);    
+                        //echo substr ($data['lectura']['periodo'], 0, 3) . substr($mes_l1, 0,3) . substr($data['lectura']['periodo'], 5, 9). substr( $mes_l2, 0,3) .substr( $data['lectura']['periodo'], 16, 13);
+                        echo $data['lectura']['periodo'];
+                ?><br>
+                <strong>Pagar antes del: </strong> &nbsp;
+
+
+                <strong>
+                    <?=( $data['vencido'] ? 'Pago Inmediato' : substr($data['lectura']['fecha_limite'],0, -4).date('Y')) ?>
+                </strong>
+
+            </td>
+
+        </tr>
+    </table>
+
+
+
+
+    <table style="width: 100%; " border="0">
+        <tr bgcolor="#5D41BD">
+            <td>
+                <strong> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                    &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;Comprobante de consumo</strong> &nbsp; &nbsp; &nbsp;
+                &nbsp; &nbsp;
+            </td>
+            <td colspan="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                <strong>Detalles de consumo</strong>
+            </td>
+
+        </tr>
+        <tr>
+            <td style=" width: 60%;">
+                <!--inicio-->
+                <?php
+                  $ruta_img=substr($data['ruta_img'],0 , strlen($data['ruta_img'])-4);
+                  $newruta=$ruta_img.'_'.$data['lectura']['periodo'];
+                  if(file_exists ( user_foto.''.$newruta)){
+                    $newruta=$newruta;
+                  }else{
+                     $newruta=$data['ruta_img'];
+                  }
+                  
+                ?>
+                <table border="0" width="110%">
+                    <tr>
+                        <td style="width: 100%; ">
+                            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <img
+                                src="<?=user_foto.''.$data['ruta_img'] ?>" height="210" width="298">&nbsp; &nbsp; &nbsp;
+
+                        </td>
+
+                    </tr>
+                </table>
+                <!--fin-->
+            </td>
+            <td style=" align-items: left; text-align: left;   width: 20%; text-indent: 1mm; ">
+                Lectura inicial:<br>
+
+                Lectura final:<br>
+
+
+                Consumos litros: <br>
+
+                Saldo favor: <br>
+
+                Adeudos:<br>
+
+                Cargos adicionales :<br>
+
+                Cuota admon: <br>
+
+                Precio del gas: <br>
+                <h3>Total a pagar
+                    <h6> Pagar cantidad exacta con centavos</h6>
+                </h3>
+            </td>
+            <td style="text-indent: 3mm; width: 20%; padding-top: 3px">
+
+                <?=round($data['lectura']['lectura_ini'], 3)?>
+
+                <br>
+
+                <?=round($data['lectura']['lectura_fin'], 3)?>
+
+                <br>
+
+                <?=round($data['lectura']['consumos_litros'], 2)?>
+
+                <br>
+
+
+
+                <?=round($data['saldofavor'], 2)?>
+
+                <br>
+
+                <?=round($data['adeudo'], 2)?>
+
+                <br>
+
+
+                <?=round($data['lectura']['cargos_add'], 2)?>
+
+                <br>
+
+                <?=round($data['lectura']['cuota_admin'], 2)?>
+
+                <br>
+
+                <?=round($data['precio_gas'], 2)?>
+
+                <br>
+
+                <h3>$
+                    <?=number_format(round($data['lectura']['total_a_pagar'], 2), 2)?>
+                    <h6>
+                        <?=convertir($data['lectura']['total_a_pagar'])?>
+                    </h6>
+                </h3>
+
+
+
+            </td>
+        </tr>
+
+    </table>
+    <strong>Historial</strong>
+    <table border="0" style="width:80%; font-size: 14px">
+        <tr style="background-color: #ECE9E9">
+            <td>PERIODO</td>
+            <td>LEC. ANT</td>
+            <td>LEC. ACT</td>
+            <td>M3</td>
+            <td>LITROS</td>
+            <td>CONSUMO MES</td>
+            <td>PAGADO</td>
+            <td>TOTAL A PAGAR</td>
+        </tr>
+
+
+        <?=$data['historial']?>
+
+
+
+
+    </table>
+
+
+    <!----tabla end--->
+
+
+
+
+
+    <?php
+                    if($data['cliente']['id_cuenta']==1){//zaira
+                ?>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <table border="0" width="100%">
+        <tr>
+            <th colspan="3"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;Opciones de pago</th>
+        </tr>
+        <tr>
+            <td>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+
+
+
+                <img src="<?=img.'oxxo-logo.png' ?>" height="110" width="170">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;
+            </td>
+            <td>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+                <img src="<?=img.'bbva-logo.png' ?>" height="90" width="170">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </td>
+            <td>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+                <img src="<?=img.'banamex-logo.png' ?>" height="90" width="170">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;
+
+            </td>
+        </tr>
+
+        <tr>
+            <td> (BANAMEX) 5204 1652 3117 3695</td>
+            <td>BANCOMER 1515561019</td>
+            <td>BANAMEX 7012-3820248</td>
+
+
+        </tr>
+
+        <tr>
+            <td> (BBVA) 4152 3132 8373 9972 </td>
+            <td>CLABE 012180015155610196</td>
+            <td>CLABE 002180701238202486</td>
+
+        </tr>
+
+        <tr>
+            <td colspan="3"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <strong>Nombre: ZAIRA ABIGAIL VILLA GARCIA</strong>
+            </td>
+
+
+        </tr>
+
+
+    </table>
+    <!-- <table border="0" style="width:100%"  >
+                       <tr bgcolor="">
+                          <th colspan="2" >
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;
+                          Opciones de pago
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;      
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;
+                          &nbsp;      
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;
+                      	  </th>
+
+                        </tr>
+
+                        <tr>
+                          <td style="width: 50%">Nombre titular:</td>
+                          <td style="width: 50%">ZAIRA ABIGAIL VILLA GARCIA</td> 
+
+                        </tr>
+                        <tr>
+                          <td>Banamex 7012-3820248</td>
+                          <td>Bancomer 1515561019</td>
+
+                        </tr>
+                        <tr>
+                          <td>Interbancaria 002180701238202486</td>
+                          <td>Interbancaria 012180015155610196</td>
+
+                        </tr>
+                        <tr>
+                          <td>Tarjeta (oxxo) 5204 1652 3117 3695</td>
+                          <td>Tarjeta (oxxo) 4152 3132 8373 9972 </td>
+                        </tr>
+                         <tr>
+                          <td>
+                                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          </td>
+                          <td>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          </td>
+                        </tr>
+                      </table> -->
+    <?php    
+                   }else{
+                   ?>
+
+    <table border="0" width="100%" style="font-size: 13px;">
+        <tr>
+            <th colspan="4"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Opciones de pago</th>
+        </tr>
+        <tr>
+            <td>
+                <img src="<?=img.'oxxo-logo.png' ?>" height="80" width="160"><br>
+
+                <img src="<?=img.'seven.png' ?>" height="40" width="75">
+
+                <img src="<?=img.'walmart.png' ?>" height="40" width="75">
+
+            </td>
+            <td>
+                &nbsp;
+
+
+                <img src="<?=img.'banorte.png' ?>" height="80" width="160">
+
+            </td>
+            <td>
+
+                <img src="<?=img.'banamex-logo.png' ?>" height="80" width="160">
+
+
+            </td>
+            <td>
+
+                <img src="<?=img.'scotiabank.jpg' ?>" height="80" width="160">
+
+
+            </td>
+        </tr>
+
+        <tr>
+            <td style="font-size: 12px">(BANAMEX) 5204 1671 8052 5693 &nbsp; &nbsp;</td>
+            <td style="font-size: 12px">BANORTE 1032019545 &nbsp; &nbsp;</td>
+            <td style="font-size: 12px">BANAMEX 246-4309619 &nbsp; &nbsp;</td>
+            <td style="font-size: 12px">SCOTIANBANK 00103712845 &nbsp; &nbsp;</td>
+
+
+
+
+        </tr>
+
+        <tr>
+            <td style="font-size: 12px">(BANORTE) 5579 2091 0682 1660 &nbsp; &nbsp;</td>
+            <td style="font-size: 12px">CLABE 072180010320195452 &nbsp; &nbsp;</td>
+            <td style="font-size: 12px">CLABE 002180024643096197 &nbsp; &nbsp;</td>
+            <td style="font-size: 12px">CLABE 044180001037128458 &nbsp; &nbsp;</td>
+
+        </tr>
+
+        <tr>
+            <td colspan="3"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <strong>Nombre: Martin Samano Botello</strong>
+            </td>
+
+
+        </tr>
+
+
+    </table>
+
+
+    <!--  <table border="0" width="100%" style="width: 100%" >
+                       <tr  bgcolor="">
+                          <th colspan="3" >
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                         	 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;     
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;     
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	
+                         
+                           Opciones de pago
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;     
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                           </th>
+
+                        </tr>
+
+                        <tr>
+                          <td>Nombre titular:</td>
+                          <td>Martin Samano Botello</td> 
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>Banorte 1032019545</td>072180010320195452
+                          <td>Banamex 246-4309619</td>002180024643096197
+                          <td>Scotiabank 00103712845</td>044180001037128458
+
+                        </tr>
+                        <tr>
+                          <td>Interbancaria 072180010320195452</td>
+                          <td>Interbancaria 002180024643096197</td>
+                          <td>Interbancaria 044180001037128458</td>
+
+                        </tr>
+                        <tr>
+                          <td></td>
+                          <td>Tarjeta Oxxo 5204 1671 8052 5693</td>
+                          <td>Tarjeta Scotiabank 5579 2091 0682 1660</td>
+                        </tr>
+                         <tr>
+                          <td >    
+                                      
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  
+                        </td>
+                        <td>
+                                    
+                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </td>
+                        <td>
+							
+                        </td>
+                        </tr>
+                         </table> -->
+
+    <?php
+                     }
+                     ?>
+
+
+    <hr>
+    <strong>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Horarios
+        de atencion: lunes a viernes de 10:00 a 19:00 hrs y sábados de 10:00 a 15:00 hrs</strong>
+    <hr>
+    <strong>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <h1 style="color: red; text-align: center; vertical-align: center; align-items: center;">
+
+            <?=( $data['vencido'] ? '¡Favor de aclarar sus pagos evite el corte! '  : '')?>
+        </h1>
+    </strong>
+
+
+
+</page>

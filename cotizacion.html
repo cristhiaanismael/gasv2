@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facturacion - marvifet.com.mx</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Estilos específicos para cuando se imprime o guarda como PDF */
+      @media print {
+        @page {
+          margin: 10mm; /* Menos margen */
+        }
+
+        body {
+          font-size: 11px; /* Reduce todo */
+        }
+
+        h1 {
+          font-size: 18px !important;
+        }
+        h2 {
+          font-size: 20px !important;
+        }
+        h3,
+        h4 {
+          font-size: 12px !important;
+        }
+
+        main {
+          padding: 10px !important; /* Menos padding */
+        }
+
+        header {
+          padding-bottom: 10px !important;
+          margin-bottom: 10px !important;
+        }
+
+        section {
+          margin-bottom: 10px !important;
+        }
+
+        table th,
+        table td {
+          padding: 6px !important; /* Antes 20px aprox */
+        }
+
+        .text-xl {
+          font-size: 14px !important;
+        }
+        .text-2xl {
+          font-size: 16px !important;
+        }
+        .text-3xl {
+          font-size: 18px !important;
+        }
+
+        .p-6,
+        .p-8,
+        .p-12 {
+          padding: 8px !important;
+        }
+
+        .mt-12,
+        .mb-12 {
+          margin-top: 10px !important;
+          margin-bottom: 10px !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-100 text-gray-800 font-sans antialiased min-h-screen p-4 md:p-8"
+  >
+    <!-- Botón de acción flotante (se oculta al imprimir) -->
+    <div class="max-w-4xl mx-auto mb-4 flex justify-end no-print"></div>
+
+    <!-- Contenedor Principal de la facturación -->
+    <main
+      class="max-w-4xl mx-auto bg-white p-8 md:p-12 shadow-lg rounded-xl print-shadow-none"
+    >
+      <!-- Encabezado -->
+      <header
+        class="flex flex-col md:flex-row justify-between items-start border-b border-gray-200 pb-8 mb-8"
+      >
+        <div class="mb-6 md:mb-0">
+          <!-- Logotipo de la empresa (Placeholder) -->
+          <div class="flex items-center gap-3 text-blue-600 mb-2">
+            <svg
+              class="w-10 h-10"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+              />
+            </svg>
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">
+              Inggein
+            </h1>
+          </div>
+          <p class="text-sm text-gray-500">Servicios Digitales y Tecnología</p>
+          <p class="text-sm text-gray-500">contacto@inggein.com</p>
+          <p class="text-sm text-gray-500">+52 (56) 28388114</p>
+        </div>
+        <div class="md:text-right">
+          <h2
+            class="text-3xl font-black text-gray-800 uppercase tracking-wider"
+          >
+            Facturacion
+          </h2>
+          <p class="text-gray-500 mt-2 font-medium">
+            Folio: <span class="text-gray-900">#FAC-2026-042</span>
+          </p>
+          <p class="text-gray-500 text-sm">
+            Fecha:
+            <span class="text-gray-900" id="current-date"
+              >14 de Abril, 2026</span
+            >
+          </p>
+          <p class="text-gray-500 text-sm">
+            Vigencia: <span class="text-gray-900">15 días</span>
+          </p>
+        </div>
+      </header>
+
+      <!-- Información del Cliente -->
+      <section class="mb-10">
+        <h3
+          class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2"
+        >
+          Preparado para:
+        </h3>
+        <div
+          class="bg-gray-50 p-4 rounded-lg border border-gray-100 inline-block min-w-[50%]"
+        >
+          <p class="text-xl font-bold text-blue-700">marvifet.com.mx</p>
+          <p class="text-gray-600 mt-1">
+            Atención: Cristhian Ismael Ramirez Urbano
+          </p>
+        </div>
+      </section>
+
+      <!-- Tabla de Servicios -->
+      <section class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr
+              class="bg-gray-100 text-gray-600 uppercase text-xs tracking-wider"
+            >
+              <th class="py-4 px-4 rounded-tl-lg font-semibold w-7/12">
+                Descripción del Servicio
+              </th>
+              <th class="py-4 px-4 text-center font-semibold">Cant.</th>
+              <th class="py-4 px-4 text-right font-semibold">P. Unitario</th>
+              <th class="py-4 px-4 text-right rounded-tr-lg font-semibold">
+                Importe
+              </th>
+            </tr>
+          </thead>
+          <tbody class="text-gray-700 divide-y divide-gray-100">
+            <!-- Item 1 -->
+            <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <td class="py-5 px-4">
+                <p class="font-bold text-gray-900">Servidor (anual)</p>
+                <p class="text-sm text-gray-500 mt-1">
+                  Infraestructura base para operación. gestión de DNS y recursos
+                  asignados para alto rendimiento.
+                </p>
+              </td>
+              <td class="py-5 px-4 text-center align-top pt-6">1</td>
+              <td class="py-5 px-4 text-right align-top pt-6">$2,910.00</td>
+              <td class="py-5 px-4 text-right font-medium align-top pt-6">
+                $2,910.00
+              </td>
+            </tr>
+
+            <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <td class="py-5 px-4">
+                <p class="font-bold text-gray-900">dominio (anual)</p>
+                <p class="text-sm text-gray-500 mt-1">
+                  Nombre registrado incluye certificado SSL.
+                </p>
+              </td>
+              <td class="py-5 px-4 text-center align-top pt-6">1</td>
+              <td class="py-5 px-4 text-right align-top pt-6">$609.00</td>
+              <td class="py-5 px-4 text-right font-medium align-top pt-6">
+                $609.00
+              </td>
+            </tr>
+
+            <!-- Item 2 -->
+            <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <td class="py-5 px-4">
+                <p class="font-bold text-gray-900">
+                  Soporte y atención prioritaria
+                </p>
+                <p class="text-sm text-gray-500 mt-1">
+                  Mantenimiento y soporte (carga de imagenes). Ejecucion de
+                  script para reducir tamaño de imagenes
+                </p>
+              </td>
+              <td class="py-5 px-4 text-center align-top pt-6">1</td>
+              <td class="py-5 px-4 text-right align-top pt-6">$800.00</td>
+              <td class="py-5 px-4 text-right font-medium align-top pt-6">
+                $800.00
+              </td>
+            </tr>
+
+            <!-- Item 2 -->
+            <tr class="hover:bg-gray-50 transition-colors duration-150">
+              <td class="py-5 px-4">
+                <p class="font-bold text-gray-900">
+                  Servicio de Correo Electronico (Mensual)
+                </p>
+                <p class="text-sm text-gray-500 mt-1">
+                  servicio pagado al provedor (Marzo)
+                </p>
+              </td>
+              <td class="py-5 px-4 text-center align-top pt-6">1</td>
+              <td class="py-5 px-4 text-right align-top pt-6">$385.00</td>
+              <td class="py-5 px-4 text-right font-medium align-top pt-6">
+                $385.00
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Resumen de Totales -->
+      <section class="flex justify-end mt-8">
+        <div class="w-full md:w-1/2 lg:w-1/3">
+          <div class="bg-gray-50 p-6 rounded-xl border border-gray-100">
+            <div class="flex justify-between mb-3 text-gray-600">
+              <span>Subtotal</span>
+              <span class="font-medium text-gray-900">$4,704.00</span>
+            </div>
+            <div class="flex justify-between mb-3 text-gray-600">
+              <span>IVA (16%)</span>
+              <span class="font-medium text-gray-900">N/A</span>
+            </div>
+            <div
+              class="flex justify-between items-center border-t border-gray-200 pt-4 mt-2"
+            >
+              <span class="text-lg font-bold text-gray-900">Total (MXN)</span>
+              <span class="text-2xl font-black text-blue-600">$4,704.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notas y Términos -->
+      <section class="mt-12 pt-8 border-t border-gray-200">
+        <h4 class="text-sm font-bold text-gray-800 mb-3">
+          Términos y Condiciones:
+        </h4>
+        <ul class="text-sm text-gray-500 space-y-2 list-disc list-inside">
+          <li>Precios expresados en Pesos Mexicanos (MXN).</li>
+
+          <li>
+            Forma de pago: Transferencia bancaria o depósito a cuenta
+            proporcionada al aceptar el servicio.
+          </li>
+
+          <li>
+            Este documento es únicamente informativo; no incluye IVA ni será
+            facturado posteriormente.
+          </li>
+        </ul>
+      </section>
+
+      <!-- Pie de página -->
+      <footer class="mt-12 text-center text-gray-400 text-sm">
+        <p>
+          Gracias por su confianza
+          <strong>marvifet.com.mx</strong>
+        </p>
+      </footer>
+    </main>
+
+    <!-- Script opcional para asegurar la fecha de hoy si se usa como plantilla viva -->
+    <script>
+      const dateElement = document.getElementById("current-date");
+      const options = { year: "numeric", month: "long", day: "numeric" };
+      dateElement.textContent = new Date().toLocaleDateString("es-MX", options);
+    </script>
+  </body>
+</html>

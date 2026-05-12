@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prueba QR</title>
+  </head>
+  <body>
+    <h3>Subir imagen (medidor + QR)</h3>
+
+    <input type="file" id="fileInput" accept="image/*" />
+    <br /><br />
+
+    <canvas id="canvas" style="display: none"></canvas>
+
+    <p><strong>Resultado QR:</strong></p>
+    <pre id="output">Sin leer...</pre>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
+    <script>
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const img = new Image();
+          const reader = new FileReader();
+
+          reader.onload = function (event) {
+            img.src = event.target.result;
+          };
+
+          img.onload = function () {
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("2d");
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height,
+            );
+
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+            if (code) {
+              document.getElementById("output").textContent = code.data;
+              console.log("QR detectado:", code.data);
+            } else {
+              document.getElementById("output").textContent =
+                "No se detectó QR";
+            }
+          };
+
+          reader.readAsDataURL(file);
+        });
+    </script>
+  </body>
+</html>

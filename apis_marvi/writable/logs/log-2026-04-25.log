@@ -1,0 +1,233 @@
+CRITICAL - 2026-04-25 16:34:31 --> Error: Call to undefined function letra_mes2()
+[Method: GET, Route: api/historial/notificar/126]
+in APPPATH\Views\recibo_pdf.php on line 180.
+ 1 SYSTEMPATH\View\View.php(240): include()
+ 2 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 3 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('recibo_pdf', [], true)
+ 4 APPPATH\Controllers\Historial.php(627): view('recibo_pdf', [...])
+ 5 APPPATH\Controllers\Historial.php(562): App\Controllers\Historial->obtenerPdfString('126')
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->enviarNotificacion('126')
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-04-25 16:36:24 --> Error: Call to undefined function letra_mes2()
+[Method: GET, Route: api/historial/notificar/126]
+in APPPATH\Views\recibo_pdf.php on line 180.
+ 1 SYSTEMPATH\View\View.php(240): include()
+ 2 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 3 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('recibo_pdf', [], true)
+ 4 APPPATH\Controllers\Historial.php(630): view('recibo_pdf', [...])
+ 5 APPPATH\Controllers\Historial.php(565): App\Controllers\Historial->obtenerPdfString('126')
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->enviarNotificacion('126')
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-04-25 16:36:32 --> Error: Call to undefined function letra_mes2()
+[Method: GET, Route: api/historial/notificar/126]
+in APPPATH\Views\recibo_pdf.php on line 180.
+ 1 SYSTEMPATH\View\View.php(240): include()
+ 2 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 3 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('recibo_pdf', [], true)
+ 4 APPPATH\Controllers\Historial.php(630): view('recibo_pdf', [...])
+ 5 APPPATH\Controllers\Historial.php(565): App\Controllers\Historial->obtenerPdfString('126')
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->enviarNotificacion('126')
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-04-25 16:41:03 --> Error: Call to undefined function letra_mes2()
+[Method: GET, Route: api/historial/notificar/126]
+in APPPATH\Views\recibo_pdf.php on line 180.
+ 1 SYSTEMPATH\View\View.php(240): include()
+ 2 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 3 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('recibo_pdf', [], true)
+ 4 APPPATH\Controllers\Historial.php(630): view('recibo_pdf', [...])
+ 5 APPPATH\Controllers\Historial.php(565): App\Controllers\Historial->obtenerPdfString('126')
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->enviarNotificacion('126')
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-04-25 16:42:26 --> Error: Call to undefined function letra_mes2()
+[Method: GET, Route: api/historial/notificar/126]
+in APPPATH\Views\recibo_pdf.php on line 180.
+ 1 SYSTEMPATH\View\View.php(240): include()
+ 2 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 3 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('recibo_pdf', [], true)
+ 4 APPPATH\Controllers\Historial.php(630): view('recibo_pdf', [...])
+ 5 APPPATH\Controllers\Historial.php(565): App\Controllers\Historial->obtenerPdfString('126')
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->enviarNotificacion('126')
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-04-25 16:47:36 --> Error: Call to undefined method App\Controllers\Historial::failInternalError()
+[Method: GET, Route: api/historial/notificar/126]
+in APPPATH\Controllers\Historial.php on line 577.
+ 1 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->enviarNotificacion('126')
+ 2 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+ 3 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-04-25 17:03:42 --> Error: Call to undefined method App\Controllers\Historial::failInternalError()
+[Method: GET, Route: api/historial/notificar/126]
+in APPPATH\Controllers\Historial.php on line 577.
+ 1 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->enviarNotificacion('126')
+ 2 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+ 3 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-04-25 17:14:55 --> Error: Call to undefined method App\Controllers\Historial::failInternalError()
+[Method: GET, Route: api/historial/notificar/126]
+in APPPATH\Controllers\Historial.php on line 577.
+ 1 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->enviarNotificacion('126')
+ 2 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+ 3 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-04-25 17:18:45 --> Iniciando envío de prueba a: ismael.cristhian@gmail.com
+ERROR - 2026-04-25 17:18:45 --> Usando API KEY: SG.Ymdetp1...
+ERROR - 2026-04-25 17:18:46 --> Status Code: 202
+ERROR - 2026-04-25 17:18:46 --> Body: 
+ERROR - 2026-04-25 17:32:14 --> FALLO GENERACION PDF: Unauthorized path host on http://localhost/marvifet_inn/apis_marvi/public/img/logo.jpg => 
+ERROR - 2026-04-25 17:35:17 --> Enviando PDF real a: ismael.cristhian@gmail.com
+ERROR - 2026-04-25 17:35:19 --> SendGrid Status: 202
+ERROR - 2026-04-25 18:18:46 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+INFO - 2026-04-25 18:35:00 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 18:35:09 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 18:35:15 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 18:35:18 --> [Historial] Email automático enviado para recibo_gas_126_26-03-2026_26-04-2026.pdf
+ERROR - 2026-04-25 18:41:48 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:01:49 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:01:57 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:02:57 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+INFO - 2026-04-25 19:03:19 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 19:03:21 --> [Historial] Email automático enviado para recibo_gas_126_26-03-2026_26-04-2026.pdf
+ERROR - 2026-04-25 19:08:42 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:08:43 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:26 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:28 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:29 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:31 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:32 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:34 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:35 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:36 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:38 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:39 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:40 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:42 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:44 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:46 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:48 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:50 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:52 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:54 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:56 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:19:58 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:00 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:02 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:04 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:06 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:08 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:09 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:11 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:13 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:14 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:16 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:17 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:19 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:20 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:22 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:23 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:20:25 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+INFO - 2026-04-25 19:20:26 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 19:20:28 --> [Historial] Email automático enviado para recibo_gas_126_26-03-2026_26-04-2026.pdf
+INFO - 2026-04-25 19:20:49 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 19:20:51 --> [Historial] Email automático enviado para recibo_gas_126_26-03-2026_26-04-2026.pdf
+ERROR - 2026-04-25 19:29:34 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:29:35 --> [Historial] Error generarPDF: Unable to get the size of the image [C:\xampp\htdocs\marvifet_inn\apis_marvi\public\img/seven.png]
+ERROR - 2026-04-25 19:36:32 --> Unknown column 'periodos' in 'where clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT *
+FROM `cortes`
+WHERE `periodos` = \'26-03-2026 26-04-2026\'
+ LIMIT 1', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(910): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `cortes`
+WHERE `periodos` = \'26-03-2026 26-04-2026\'
+ LIMIT 1')
+ 3 SYSTEMPATH\Database\BaseConnection.php(827): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `cortes`
+WHERE `periodos` = \'26-03-2026 26-04-2026\'
+ LIMIT 1')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `cortes`
+WHERE `periodos` = :periodos:
+ LIMIT 1', [...], false)
+ 5 SYSTEMPATH\Model.php(295): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(714): CodeIgniter\Model->doFirst()
+ 7 APPPATH\Controllers\Historial.php(73): CodeIgniter\BaseModel->first()
+ 8 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->getDetails('1591')
+ 9 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+10 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-04-25 19:36:32 --> [Historial] Error getDetalle: Unknown column 'periodos' in 'where clause'
+ERROR - 2026-04-25 19:36:33 --> Unknown column 'periodos' in 'where clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT *
+FROM `cortes`
+WHERE `periodos` = \'26-03-2026 26-04-2026\'
+ LIMIT 1', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(910): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `cortes`
+WHERE `periodos` = \'26-03-2026 26-04-2026\'
+ LIMIT 1')
+ 3 SYSTEMPATH\Database\BaseConnection.php(827): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `cortes`
+WHERE `periodos` = \'26-03-2026 26-04-2026\'
+ LIMIT 1')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `cortes`
+WHERE `periodos` = :periodos:
+ LIMIT 1', [...], false)
+ 5 SYSTEMPATH\Model.php(295): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(714): CodeIgniter\Model->doFirst()
+ 7 APPPATH\Controllers\Historial.php(73): CodeIgniter\BaseModel->first()
+ 8 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Historial->getDetails('1591')
+ 9 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Historial))
+10 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-04-25 19:36:33 --> [Historial] Error getDetalle: Unknown column 'periodos' in 'where clause'
+ERROR - 2026-04-25 19:39:16 --> [Historial] Error getDetails: Undefined array key "fecha_ini"
+ERROR - 2026-04-25 19:39:17 --> [Historial] Error getDetails: Undefined array key "fecha_ini"
+ERROR - 2026-04-25 19:56:13 --> [Historial] Error getList: Call to undefined method App\Models\CorteModel::getActivePeriod
+ERROR - 2026-04-25 19:56:13 --> [Historial] Error getList: Call to undefined method App\Models\CorteModel::getActivePeriod
+ERROR - 2026-04-25 19:56:26 --> [Historial] Error getList: Call to undefined method App\Models\CorteModel::getActivePeriod
+ERROR - 2026-04-25 19:56:26 --> [Historial] Error getList: Call to undefined method App\Models\CorteModel::getActivePeriod
+ERROR - 2026-04-25 19:56:31 --> [Historial] Error getList: Call to undefined method App\Models\CorteModel::getActivePeriod
+ERROR - 2026-04-25 19:56:32 --> [Historial] Error getList: Call to undefined method App\Models\CorteModel::getActivePeriod
+ERROR - 2026-04-25 19:56:38 --> [Historial] Error getList: Call to undefined method App\Models\CorteModel::getActivePeriod
+ERROR - 2026-04-25 19:56:38 --> [Historial] Error getList: Call to undefined method App\Models\CorteModel::getActivePeriod
+INFO - 2026-04-25 20:37:21 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 20:37:24 --> [Historial] Email automático enviado para recibo_gas_126_26-03-2026_26-04-2026.pdf
+INFO - 2026-04-25 20:37:24 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 20:37:27 --> [Historial] Email automático enviado para recibo_gas_126_26-03-2026_26-04-2026.pdf
+INFO - 2026-04-25 20:37:47 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 20:37:49 --> [Historial] Email automático enviado para recibo_gas_126_26-03-2026_26-04-2026.pdf
+INFO - 2026-04-25 20:37:50 --> [Historial] PDF Regenerado: recibo_gas_126_26-03-2026_26-04-2026.pdf borrado para recreación.
+INFO - 2026-04-25 20:37:52 --> [Historial] Email automático enviado para recibo_gas_126_26-03-2026_26-04-2026.pdf

@@ -1,0 +1,119 @@
+ERROR - 2026-05-05 22:31:16 --> MySQL server has gone away
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('SELECT *
+FROM `usuarios`
+WHERE `usuario` = \'usu\'
+AND `password` = \'root\'
+ LIMIT 1', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(910): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `usuarios`
+WHERE `usuario` = \'usu\'
+AND `password` = \'root\'
+ LIMIT 1')
+ 3 SYSTEMPATH\Database\BaseConnection.php(827): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `usuarios`
+WHERE `usuario` = \'usu\'
+AND `password` = \'root\'
+ LIMIT 1')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `usuarios`
+WHERE `usuario` = :usuario:
+AND `password` = :password:
+ LIMIT 1', [...], false)
+ 5 SYSTEMPATH\Model.php(295): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(714): CodeIgniter\Model->doFirst()
+ 7 APPPATH\Models\UsuarioModel.php(24): CodeIgniter\BaseModel->first()
+ 8 APPPATH\Controllers\Auth.php(33): App\Models\UsuarioModel->validateCredentials('usu', 'root')
+ 9 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Auth->login()
+10 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+11 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+13 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+14 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2026-05-05 22:31:16 --> Error: Call to undefined method App\Controllers\Auth::failInternalError()
+[Method: POST, Route: api/login]
+in APPPATH\Controllers\Auth.php on line 58.
+ 1 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Auth->login()
+ 2 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+ 3 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-05-05 22:31:26 --> Error connecting to the database: mysqli_sql_exception: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión in C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\MySQLi\Connection.php:201
+Stack trace:
+#0 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\MySQLi\Connection.php(201): mysqli->real_connect('localhost', 'root', Object(SensitiveParameterValue), 'inggeinc_marvif...', 3306, '', 0)
+#1 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Model.php(295): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\BaseModel.php(714): CodeIgniter\Model->doFirst()
+#6 C:\xampp\htdocs\marvifet_inn\apis_marvi\app\Models\UsuarioModel.php(24): CodeIgniter\BaseModel->first()
+#7 C:\xampp\htdocs\marvifet_inn\apis_marvi\app\Controllers\Auth.php(33): App\Models\UsuarioModel->validateCredentials('usu', 'root')
+#8 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(951): App\Controllers\Auth->login()
+#9 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+#10 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Boot.php(417): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\marvifet_inn\apis_marvi\public\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión in C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\MySQLi\Connection.php:231
+Stack trace:
+#0 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#3 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Model.php(295): CodeIgniter\Database\BaseBuilder->get()
+#4 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\BaseModel.php(714): CodeIgniter\Model->doFirst()
+#5 C:\xampp\htdocs\marvifet_inn\apis_marvi\app\Models\UsuarioModel.php(24): CodeIgniter\BaseModel->first()
+#6 C:\xampp\htdocs\marvifet_inn\apis_marvi\app\Controllers\Auth.php(33): App\Models\UsuarioModel->validateCredentials('usu', 'root')
+#7 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(951): App\Controllers\Auth->login()
+#8 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+#9 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Boot.php(417): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\marvifet_inn\apis_marvi\public\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2026-05-05 22:31:26 --> Error: Call to undefined method App\Controllers\Auth::failInternalError()
+[Method: POST, Route: api/login]
+in APPPATH\Controllers\Auth.php on line 58.
+ 1 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Auth->login()
+ 2 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+ 3 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2026-05-05 22:38:30 --> Error connecting to the database: mysqli_sql_exception: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión in C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\MySQLi\Connection.php:201
+Stack trace:
+#0 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\MySQLi\Connection.php(201): mysqli->real_connect('localhost', 'root', Object(SensitiveParameterValue), 'inggeinc_marvif...', 3306, '', 0)
+#1 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#3 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Model.php(295): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\BaseModel.php(714): CodeIgniter\Model->doFirst()
+#6 C:\xampp\htdocs\marvifet_inn\apis_marvi\app\Models\Usuarios.php(24): CodeIgniter\BaseModel->first()
+#7 C:\xampp\htdocs\marvifet_inn\apis_marvi\app\Controllers\Auth.php(34): App\Models\Usuarios->validateCredentials('usu', 'root')
+#8 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(951): App\Controllers\Auth->login()
+#9 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+#10 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Boot.php(417): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\marvifet_inn\apis_marvi\public\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión in C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\MySQLi\Connection.php:231
+Stack trace:
+#0 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#2 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#3 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Model.php(295): CodeIgniter\Database\BaseBuilder->get()
+#4 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\BaseModel.php(714): CodeIgniter\Model->doFirst()
+#5 C:\xampp\htdocs\marvifet_inn\apis_marvi\app\Models\Usuarios.php(24): CodeIgniter\BaseModel->first()
+#6 C:\xampp\htdocs\marvifet_inn\apis_marvi\app\Controllers\Auth.php(34): App\Models\Usuarios->validateCredentials('usu', 'root')
+#7 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(951): App\Controllers\Auth->login()
+#8 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+#9 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Boot.php(417): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\marvifet_inn\apis_marvi\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\marvifet_inn\apis_marvi\public\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+ERROR - 2026-05-05 23:11:43 --> [Historial] ERROR DE ENVÍO AUTOMÁTICO: El cliente no tiene un correo electrónico válido registrado.
