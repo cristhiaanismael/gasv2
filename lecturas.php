@@ -65,7 +65,7 @@ include 'includes/head.php';
                     <button id="main-upload-btn" class="bg-[#0F172A] text-white px-8 py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-900/20 hover:bg-gray-800 hover:shadow-xl hover:-translate-y-0.5 transition-all active:translate-y-0">
                         Explorar Archivos o Arrastrar
                     </button>
-                    <p class="text-xs text-gray-400 mt-4 font-semibold uppercase tracking-widest">Soporta JPG, PNG (Max 25 imágenes por lote)</p>
+                    <p class="text-xs text-gray-400 mt-4 font-semibold uppercase tracking-widest">Soporta JPG, PNG (Max 40 imágenes por lote)</p>
                 </div>
             </div>
 
@@ -97,8 +97,8 @@ include 'includes/head.php';
                     <div id="active-inspection" class="flex-1 flex overflow-hidden">
                         <!-- Visor -->
                         <div class="w-1/2 bg-slate-900 p-6 flex flex-col relative group">
-                            <div class="flex-1 rounded-xl overflow-hidden bg-black flex items-center justify-center relative shadow-2xl border border-gray-800">
-                                <img id="inspector-image" src="" alt="Evidencia" class="max-w-full max-h-full object-contain">
+                            <div id="image-magnifier-container" class="flex-1 rounded-xl overflow-hidden bg-black flex items-center justify-center relative shadow-2xl border border-gray-800 cursor-zoom-in group-hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] transition-shadow">
+                                <img id="inspector-image" src="" alt="Evidencia" class="max-w-full max-h-full object-contain transition-transform duration-150 ease-out origin-center">
                             </div>
                             <p class="text-gray-400 text-xs text-center mt-4 font-medium" id="inspector-filename">IMG_20260419_001.jpg</p>
                         </div>
@@ -144,7 +144,12 @@ include 'includes/head.php';
                                         <span class="text-xs text-gray-500 font-medium flex items-center">
                                             <i data-lucide="history" class="w-3.5 h-3.5 mr-1"></i> Lec. Anterior: <span class="font-bold text-gray-700 ml-1" id="lectura-anterior">--</span>
                                         </span>
-                                        <span class="text-xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded border border-green-100" id="consumo-calculado">0 m³ cons.</span>
+                                        <div class="flex items-center space-x-2">
+                                            <button id="btn-forzar-calculo" class="hidden px-2.5 py-1 text-[10px] bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg shadow-sm transition-colors uppercase tracking-wider flex items-center">
+                                                <i data-lucide="zap" class="w-3 h-3 mr-1"></i> Forzar Cálculo
+                                            </button>
+                                            <span class="text-xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded border border-green-100" id="consumo-calculado">0 m³ cons.</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -221,6 +226,39 @@ include 'includes/head.php';
             </div>
         </div>
     </div>
+
+    <!-- PANEL DESLIZABLE DE PROGRESO DE LECTURAS -->
+    <div id="progress-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden transition-opacity duration-300 opacity-0"></div>
+    <div id="progress-panel" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl z-[70] transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-white relative z-10 shadow-sm">
+            <div>
+                <h3 class="text-lg font-black text-slate-800">Progreso de Captura</h3>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Periodo: <span id="progress-periodo" class="font-bold text-blue-600">...</span></p>
+            </div>
+            <button id="close-progress-panel" class="p-2 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto bg-slate-50 p-4" id="progress-content">
+            <!-- Loader -->
+            <div id="progress-loader" class="flex flex-col items-center justify-center h-40">
+                <i data-lucide="loader-2" class="w-8 h-8 text-blue-500 animate-spin mb-3"></i>
+                <p class="text-sm font-bold text-slate-500">Cargando progreso...</p>
+            </div>
+            
+            <!-- Contenedor de Edificios -->
+            <div id="progress-buildings" class="space-y-3 hidden">
+                <!-- Se llenará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTÓN FLOTANTE PARA ABRIR PROGRESO -->
+    <button id="btn-open-progress" class="fixed bottom-6 right-6 z-[50] bg-indigo-600 text-white rounded-full p-4 shadow-xl shadow-indigo-600/30 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all group flex items-center">
+        <i data-lucide="bar-chart-2" class="w-6 h-6 group-hover:-translate-y-0.5 transition-transform"></i>
+        <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap pl-0 group-hover:pl-2 font-bold text-sm">Ver Progreso</span>
+    </button>
 
     <!-- Tom Select CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">

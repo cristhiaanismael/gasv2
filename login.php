@@ -18,7 +18,7 @@ if (isset($_SESSION['isLoggedIn']) && $_SESSION['isLoggedIn'] === true) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso | Marvifet Inn</title>
+    <title>Acceso | Marvifet </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -84,20 +84,32 @@ if (isset($_SESSION['isLoggedIn']) && $_SESSION['isLoggedIn'] === true) {
         <div class="grid grid-cols-1 md:grid-cols-1 gap-12 items-center">
             
             <div class="glass-card rounded-[40px] p-10 md:p-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                <div class="mb-10">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                            <i data-lucide="zap" class="w-6 h-6"></i>
-                        </div>
-                        <h2 class="text-3xl font-black text-slate-800 tracking-tight">Acceso <span class="text-indigo-600">Portal</span></h2>
+                <div class="flex flex-col items-center mb-10 text-center">
+                    <div class="mb-10 relative group flex justify-center items-center">
+                        <!-- Sophisticated Glow -->
+                        <div class="absolute inset-0 bg-gradient-to-tr 
+                         rounded-full  opacity-0 group-hover:opacity-100 
+                         transition-opacity
+                          duration-1000"></div>
+                        
+                        <img src="img/logo.png" 
+                             alt="Marvifet Logo" 
+                             class="relative w-48 h-auto "
+                        >
                     </div>
-                    <p class="text-slate-500 font-medium leading-relaxed">Bienvenido de nuevo. Ingresa tus credenciales para administrar Marvifet Inn.</p>
+
+                    <h2 class="text-4xl font-black text-slate-800 tracking-tight mb-3">
+                        Acceso <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Portal</span>
+                    </h2>
+                    <p class="text-slate-500 font-medium leading-relaxed max-w-[280px]">
+                       Ingresa tus credenciales para acceder al portal.
+                    </p>
                 </div>
 
                 <div id="login-container" class="space-y-8">
                     <div class="space-y-6">
                         <div class="group">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1 group-focus-within:text-indigo-600 transition-colors">Usuario Maestro</label>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1 group-focus-within:text-indigo-600 transition-colors">Usuario</label>
                             <div class="relative">
                                 <input 
                                     type="text" 
@@ -110,7 +122,7 @@ if (isset($_SESSION['isLoggedIn']) && $_SESSION['isLoggedIn'] === true) {
                         </div>
 
                         <div class="group">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1 group-focus-within:text-indigo-600 transition-colors">Clave de Acceso</label>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1 group-focus-within:text-indigo-600 transition-colors">Contraseña</label>
                             <div class="relative">
                                 <input 
                                     type="password" 
@@ -141,7 +153,7 @@ if (isset($_SESSION['isLoggedIn']) && $_SESSION['isLoggedIn'] === true) {
                 </div>
                 
                 <div class="mt-12 flex justify-between items-center text-[10px] font-black text-slate-300 uppercase tracking-widest border-t border-slate-100 pt-8">
-                    <span>Marvifet Inn &copy; 2026</span>
+                    <span>Inggein  &copy; 2026</span>
                     <span class="flex items-center">
                         <span class="w-1 h-1 rounded-full bg-green-400 mr-2 animate-pulse"></span>
                         Servidor Activo

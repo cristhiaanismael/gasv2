@@ -285,16 +285,16 @@ if (!function_exists('convertir')) {
 
     </table>
     <strong>Historial</strong>
-    <table border="0" style="width:80%; font-size: 14px">
-        <tr style="background-color: #ECE9E9">
-            <td>PERIODO</td>
-            <td>LEC. ANT</td>
-            <td>LEC. ACT</td>
-            <td>M3</td>
-            <td>LITROS</td>
-            <td>CONSUMO MES</td>
-            <td>PAGADO</td>
-            <td>TOTAL A PAGAR</td>
+    <table border="0" style="width: 100%; font-size: 14px; border-collapse: collapse; text-align: center;">
+        <tr style="background-color: #ECE9E9; font-weight: bold;">
+            <td style="width: 15%; padding: 4px;">PERIODO</td>
+            <td style="width: 12%; padding: 4px;">LEC. ANT</td>
+            <td style="width: 12%; padding: 4px;">LEC. ACT</td>
+            <td style="width: 10%; padding: 4px;">M3</td>
+            <td style="width: 10%; padding: 4px;">LITROS</td>
+            <td style="width: 13%; padding: 4px;">CONSUMO MES</td>
+            <td style="width: 13%; padding: 4px;">PAGADO</td>
+            <td style="width: 15%; padding: 4px;">TOTAL A PAGAR</td>
         </tr>
 
 
@@ -315,276 +315,143 @@ if (!function_exists('convertir')) {
     <?php
                     if($data['cliente']['id_cuenta']==1){//zaira
                 ?>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <table border="0" width="100%">
-        <tr>
-            <th colspan="3"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;Opciones de pago</th>
+    <!-- Sección: Opciones de pago ZAIRA -->
+    <div style="text-align: center; font-weight: bold; font-size: 14px; margin-top: 10px; margin-bottom: 5px;">
+        Opciones de pago
+    </div>
+    <table border="0" width="100%" style="width: 100%; font-size: 13px; border-collapse: collapse;">
+        <colgroup>
+            <col style="width: 33%;">
+            <col style="width: 33%;">
+            <col style="width: 34%;">
+        </colgroup>
+        <!-- Fila espaciadora invisible para forzar el ancho al 100% -->
+        <tr style="height: 1px; line-height: 1px;">
+            <td width="33%" style="color: transparent;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+            <td width="33%" style="color: transparent;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+            <td width="34%" style="color: transparent;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
         </tr>
         <tr>
-            <td>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-
-
-
-                <img src="<?=img.'oxxo-logo.png' ?>" height="110" width="170">
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;
+            <!-- OXXO -->
+            <td style="width: 33%; text-align: center; vertical-align: middle; padding: 4px;">
+                <img src="<?=img.'oxxo-logo.png' ?>" height="60" width="110">
             </td>
-            <td>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-
-                <img src="<?=img.'bbva-logo.png' ?>" height="90" width="170">
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <!-- BBVA -->
+            <td style="width: 33%; text-align: center; vertical-align: middle; padding: 4px;">
+                <img src="<?=img.'bbva-logo.png' ?>" height="60" width="140">
             </td>
-            <td>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-                <img src="<?=img.'banamex-logo.png' ?>" height="90" width="170">
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;
-
+            <!-- BANAMEX -->
+            <td style="width: 34%; text-align: center; vertical-align: middle; padding: 4px;">
+                <img src="<?=img.'banamex-logo.png' ?>" height="60" width="140">
             </td>
         </tr>
-
         <tr>
-            <td> (BANAMEX) 5204 1652 3117 3695</td>
-            <td>BANCOMER 1515561019</td>
-            <td>BANAMEX 7012-3820248</td>
-
-
+            <!-- Tarjetas Oxxo/Banamex/BBVA -->
+            <td style="font-size: 11px; text-align: center; vertical-align: top; padding: 3px 2px;">
+                BANAMEX (Tarjeta)<br>5204 1652 3117 3695<br><br>
+                BBVA (Tarjeta)<br>4152 3139 3022 9138
+            </td>
+            <td style="font-size: 11px; text-align: center; vertical-align: top; padding: 3px 2px;">
+                BANCOMER 1515561019<br>
+                CLABE 012180015155610196
+            </td>
+            <td style="font-size: 11px; text-align: center; vertical-align: top; padding: 3px 2px;">
+                BANAMEX 7012-3820248<br>
+                CLABE 002180701238202486
+            </td>
         </tr>
-
         <tr>
-            <td> (BBVA) 4152 3132 8373 9972 </td>
-            <td>CLABE 012180015155610196</td>
-            <td>CLABE 002180701238202486</td>
-
-        </tr>
-
-        <tr>
-            <td colspan="3"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <td colspan="3" style="text-align: center; padding-top: 10px;">
                 <strong>Nombre: ZAIRA ABIGAIL VILLA GARCIA</strong>
             </td>
-
-
         </tr>
-
-
     </table>
-    <!-- <table border="0" style="width:100%"  >
-                       <tr bgcolor="">
-                          <th colspan="2" >
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;
-                          Opciones de pago
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;      
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;
-                          &nbsp;      
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;
-                      	  </th>
 
-                        </tr>
-
-                        <tr>
-                          <td style="width: 50%">Nombre titular:</td>
-                          <td style="width: 50%">ZAIRA ABIGAIL VILLA GARCIA</td> 
-
-                        </tr>
-                        <tr>
-                          <td>Banamex 7012-3820248</td>
-                          <td>Bancomer 1515561019</td>
-
-                        </tr>
-                        <tr>
-                          <td>Interbancaria 002180701238202486</td>
-                          <td>Interbancaria 012180015155610196</td>
-
-                        </tr>
-                        <tr>
-                          <td>Tarjeta (oxxo) 5204 1652 3117 3695</td>
-                          <td>Tarjeta (oxxo) 4152 3132 8373 9972 </td>
-                        </tr>
-                         <tr>
-                          <td>
-                                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          </td>
-                          <td>
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          </td>
-                        </tr>
-                      </table> -->
     <?php    
                    }else{
                    ?>
 
-    <table border="0" width="100%" style="font-size: 13px;">
-        <tr>
-            <th colspan="4"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Opciones de pago</th>
+    <!-- Sección: Opciones de pago LIZZETTE -->
+    <div style="text-align: center; font-weight: bold; font-size: 14px; margin-top: 10px; margin-bottom: 5px;">
+        Opciones de pago
+    </div>
+    <table border="0" width="100%" style="width: 100%; font-size: 13px; border-collapse: collapse;">
+        <colgroup>
+            <col style="width: 22%;">
+            <col style="width: 26%;">
+            <col style="width: 26%;">
+            <col style="width: 26%;">
+        </colgroup>
+        <!-- Fila espaciadora invisible para forzar el ancho al 100% -->
+        <tr style="height: 1px; line-height: 1px;">
+            <td width="22%" style="color: transparent;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+            <td width="26%" style="color: transparent;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+            <td width="26%" style="color: transparent;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+            <td width="26%" style="color: transparent;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
         </tr>
+        <!-- Fila de logos: col1=pago efectivo, col2=Banorte, col3=Banamex, col4=Scotiabank -->
         <tr>
-            <td>
-                <img src="<?=img.'oxxo-logo.png' ?>" height="80" width="160"><br>
-
-                <img src="<?=img.'seven.png' ?>" height="40" width="75">
-
-                <img src="<?=img.'walmart.png' ?>" height="40" width="75">
-
-            </td>
-            <td>
-                &nbsp;
-
-
-                <img src="<?=img.'banorte.png' ?>" height="80" width="160">
-
-            </td>
-            <td>
-
-                <img src="<?=img.'banamex-logo.png' ?>" height="80" width="160">
-
-
-            </td>
-            <td>
-
-                <img src="<?=img.'scotiabank.jpg' ?>" height="80" width="160">
-
-
-            </td>
-        </tr>
-
-        <tr>
-            <td style="font-size: 12px">(BANAMEX) 5204 1671 8052 5693 &nbsp; &nbsp;</td>
-            <td style="font-size: 12px">BANORTE 1032019545 &nbsp; &nbsp;</td>
-            <td style="font-size: 12px">BANAMEX 246-4309619 &nbsp; &nbsp;</td>
-            <td style="font-size: 12px">SCOTIANBANK 00103712845 &nbsp; &nbsp;</td>
-
-
-
-
-        </tr>
-
-        <tr>
-            <td style="font-size: 12px">(BANORTE) 5579 2091 0682 1660 &nbsp; &nbsp;</td>
-            <td style="font-size: 12px">CLABE 072180010320195452 &nbsp; &nbsp;</td>
-            <td style="font-size: 12px">CLABE 002180024643096197 &nbsp; &nbsp;</td>
-            <td style="font-size: 12px">CLABE 044180001037128458 &nbsp; &nbsp;</td>
-
-        </tr>
-
-        <tr>
-            <td colspan="3"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <strong>Nombre: Martin Samano Botello</strong>
+            <!-- Pago en efectivo: Oxxo+Farmacias arriba, Seven abajo -->
+            <td width="22%" style="text-align: center; vertical-align: middle; padding: 4px;">
+                <table border="0" width="100%" style="border-collapse: collapse;">
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle; padding-bottom: 4px;">
+                            <img src="<?=img.'oxxo-logo.png' ?>" height="38" width="70">
+                            &nbsp;
+                            <img src="<?=img.'farmacias.jpg' ?>" height="38" width="70">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">
+                            <img src="<?=img.'seven.png' ?>" height="38" width="70">
+                        </td>
+                    </tr>
+                </table>
             </td>
 
+            <!-- Banorte -->
+            <td width="26%" style="text-align: center; vertical-align: middle; padding: 4px;">
+                <img src="<?=img.'banorte.png' ?>" height="60" width="140">
+            </td>
 
+            <!-- Banamex -->
+            <td width="26%" style="text-align: center; vertical-align: middle; padding: 4px;">
+                <img src="<?=img.'banamex-logo.png' ?>" height="60" width="140">
+            </td>
+
+            <!-- Scotiabank -->
+            <td width="26%" style="text-align: center; vertical-align: middle; padding: 4px;">
+                <img src="<?=img.'scotiabank.jpg' ?>" height="60" width="140">
+            </td>
         </tr>
 
+        <!-- Fila: tarjetas / número de cuenta -->
+        <tr>
+            <td width="22%" style="font-size: 11px; text-align: center; vertical-align: top; padding: 3px 2px;">
+                BANAMEX (Tarjeta)<br>5204 1658 6987 7799<br><br>
+                SCOTIABANK (Tarjeta)<br>4043 1300 1323 7926
+            </td>
+            <td width="26%" style="font-size: 11px; text-align: center; vertical-align: top; padding: 3px 2px;">
+                BANORTE 1202690242<br>CLABE 072180012026902426
+            </td>
+            <td width="26%" style="font-size: 11px; text-align: center; vertical-align: top; padding: 3px 2px;">
+                BANAMEX 7018000005567271<br>CLABE 002180701855672716
+            </td>
+            <td width="26%" style="font-size: 11px; text-align: center; vertical-align: top; padding: 3px 2px;">
+                SCOTIABANK 25604513049<br>CLABE 044180256045130490
+            </td>
+        </tr>
 
+        <!-- Nombre titular -->
+        <tr>
+            <td colspan="4" style="text-align: center; padding-top: 5px;">
+                <strong>Nombre: LIZZETTE VILLA GARCIA</strong>
+            </td>
+        </tr>
     </table>
 
 
-    <!--  <table border="0" width="100%" style="width: 100%" >
-                       <tr  bgcolor="">
-                          <th colspan="3" >
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                         	 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;     
-                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;     
-                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	
-                         
-                           Opciones de pago
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;     
-                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                           </th>
 
-                        </tr>
-
-                        <tr>
-                          <td>Nombre titular:</td>
-                          <td>Martin Samano Botello</td> 
-                          <td></td>
-                        </tr>
-                        <tr>
-                          <td>Banorte 1032019545</td>072180010320195452
-                          <td>Banamex 246-4309619</td>002180024643096197
-                          <td>Scotiabank 00103712845</td>044180001037128458
-
-                        </tr>
-                        <tr>
-                          <td>Interbancaria 072180010320195452</td>
-                          <td>Interbancaria 002180024643096197</td>
-                          <td>Interbancaria 044180001037128458</td>
-
-                        </tr>
-                        <tr>
-                          <td></td>
-                          <td>Tarjeta Oxxo 5204 1671 8052 5693</td>
-                          <td>Tarjeta Scotiabank 5579 2091 0682 1660</td>
-                        </tr>
-                         <tr>
-                          <td >    
-                                      
-                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  
-                        </td>
-                        <td>
-                                    
-                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        </td>
-                        <td>
-							
-                        </td>
-                        </tr>
-                         </table> -->
 
     <?php
                      }

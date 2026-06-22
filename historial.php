@@ -19,7 +19,7 @@ include 'includes/head.php';
 
             <!-- MAIN DATA VIEW -->
             <main id="main-scroll-area" class="flex-1 overflow-y-auto p-4 sm:p-8 w-full bg-slate-50/50 transition-all duration-300">
-                <div class="max-w-6xl mx-auto">
+                <div class="w-full mx-auto">
                     <!-- Header del Edificio Actual -->
                     <div class="mb-8 flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                         <div>
@@ -37,19 +37,84 @@ include 'includes/head.php';
                         </div>
 
                         <div class="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
-                            <!-- Buscador Inteligente AI -->
-                            <div class="relative flex items-center h-10 group">
-                                <div id="search-omni-container" class="flex items-center bg-gray-50 border border-gray-200 rounded-full overflow-hidden transition-all duration-500 ease-in-out w-10 hover:w-72 focus-within:w-72 shadow-sm hover:shadow-md hover:bg-white focus-within:bg-white">
-                                    <div class="w-10 h-10 flex items-center justify-center flex-shrink-0 text-gray-400 group-hover:text-blue-600 transition-colors cursor-pointer">
+                            <div class="relative flex flex-col items-center group z-50">
+                                <div id="search-omni-container" class="flex items-center bg-white/80 border border-gray-200/80 rounded-2xl overflow-hidden transition-all duration-300 w-full sm:w-80 shadow-sm focus-within:shadow-md focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 p-1">
+                                    <div id="search-omni-icon-btn" class="w-10 h-10 flex items-center justify-center flex-shrink-0 text-gray-400 cursor-text">
                                         <i data-lucide="search" class="w-4 h-4"></i>
                                     </div>
                                     <input type="text" id="search-omni-input" 
-                                           placeholder="Buscar: Nombre, Depto, Email, Total..." 
-                                           class="w-full bg-transparent border-none focus:ring-0 text-[11px] font-bold text-gray-700 pr-4 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-300" />
+                                           placeholder="Buscar: Nombre, Depto, Email..." 
+                                           autocomplete="nope"
+                                           spellcheck="false"
+                                           class="w-full bg-transparent border-none focus:ring-0 text-xs font-bold text-gray-700 placeholder-gray-400 px-1" />
+                                    <button id="search-omni-go" disabled
+                                            class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-4 py-2 rounded-xl ml-1 transition-all duration-300 uppercase tracking-widest active:scale-95 flex-shrink-0 disabled:opacity-50 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed">
+                                        Go
+                                    </button>
+                                </div>
+
+                                <div id="search-filters-container" class="absolute top-full right-0 mt-2 w-full sm:w-[28rem] bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-100 p-4 hidden transition-all z-[120] transform origin-top">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Buscar por:</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2">
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="edificio" checked>
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Edificio</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="departamento" checked>
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Depto</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="cliente" checked>
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Nombre Titular</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="correo" checked>
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Correo</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="lt_ant">
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Lt Ant.</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="recibo_ant">
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Total Periodo(ant)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="saldo_ant" checked>
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Saldo Ant.</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="lt">
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Lt</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="total_periodo" checked>
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Total Periodo</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="saldo_actual" checked>
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Saldo Actual</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="adeudos">
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Adeudos</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="saldo_favor">
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Saldo a Favor</span>
+                                        </label>
+                                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                                            <input type="checkbox" class="search-filter-cb w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" value="abonos">
+                                            <span class="text-[10px] font-bold text-gray-700 truncate">Abonos</span>
+                                        </label>
+                                    </div>
                                 </div>
                                 
                                 <!-- Dropdown de Resultados Inteligentes -->
-                                <div id="search-omni-results" class="hidden absolute top-full right-0 mt-3 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 z-[100] overflow-hidden transition-all duration-300">
+                                <div id="search-omni-results" class="hidden absolute top-full right-0 mt-3 w-full sm:w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 z-[100] overflow-hidden transition-all duration-300">
                                     <div class="p-3 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
                                         <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Sugerencias AI</span>
                                         <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></div>
@@ -126,7 +191,7 @@ include 'includes/head.php';
                         </div>
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                             <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Consumo Total</h3>
-                            <p id="kpi-consumo" class="text-xl sm:text-2xl font-black text-gray-900">0 <span class="text-sm text-gray-400 font-medium">m³</span></p>
+                            <p id="kpi-consumo" class="text-xl sm:text-2xl font-black text-gray-900">0 <span class="text-sm text-gray-400 font-medium">lt</span></p>
                         </div>
                         <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-100 shadow-sm relative overflow-hidden">
                             <div class="relative z-10">
@@ -150,10 +215,15 @@ include 'includes/head.php';
                                         </th>
                                         <th class="px-4 py-3">Depto</th>
                                         <th class="px-4 py-3">Nombre del Titular</th>
-                                        <th class="px-4 py-3 text-center">M3</th>
+                                        <th class="px-4 py-3 text-center text-slate-400" title="Lectura Inicial">Lec. Ant.</th>
+                                        <th class="px-4 py-3 text-center text-slate-400" title="Lectura Final">Lec. Act.</th>
+                                        <th class="px-4 py-3 text-center text-slate-400" title="Litros del periodo anterior">Lt(ant)</th>
+                                        <th class="px-4 py-3 text-center text-slate-400" title="Total a pagar del mes anterior">Total Periodo(ant)</th>
+                                        <th class="px-4 py-3 text-center text-slate-400" title="Saldo con el que cerró el periodo anterior (arrastre al periodo actual)">Saldo Cierre(ant)</th>
                                         <th class="px-4 py-3 text-center">Lt</th>
                                         <th class="px-4 py-3 text-center font-bold text-gray-700">Total Periodo</th>
                                         <th class="px-4 py-3 text-center font-bold text-blue-600">Saldo Actual</th>
+                                        <th class="px-4 py-3 text-center text-slate-400">Último abono realizado</th>
                                         <th class="px-4 py-3 text-center">Estado</th>
                                         <th class="px-4 py-3 pr-6 text-right">Acciones</th>
                                     </tr>
@@ -168,7 +238,7 @@ include 'includes/head.php';
                     <!-- Success State & Auto-Advance -->
                     <div id="success-state-container" class="mt-8 bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-2xl p-8 flex-col items-center justify-center text-center shadow-xl relative overflow-hidden hidden">
                         <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
-                        <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4 border border-white/20 backdrop-blur-sm mx-auto">
+                        <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4 border border-white/20 mx-auto">
                             <i data-lucide="check-circle" class="w-8 h-8 text-green-400"></i>
                         </div>
                         <h3 class="text-2xl font-black text-white mb-2">¡<span id="success-building-name"></span> al 100%!</h3>
@@ -274,14 +344,10 @@ include 'includes/head.php';
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 mt-1">
+                <div class="mt-1">
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-gray-900 uppercase">Adicionales ($)</label>
                         <input type="number" id="panel-input-add" step="0.01" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-amber-600 uppercase">Ajuste (+/-)</label>
-                        <input type="number" id="panel-input-ajuste" step="0.01" placeholder="0.00" class="w-full bg-amber-50 border border-amber-100 rounded-xl px-3 py-1.5 text-sm font-bold text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500" />
                     </div>
                 </div>
 
@@ -306,7 +372,7 @@ include 'includes/head.php';
                         </div>
                     </div>
                 </div>
-
+                <div id="lbl-abonos-periodo-container"></div>
                 <div class="space-y-1 mt-1">
                     <div class="flex items-center justify-between">
                         <label class="text-[10px] font-bold text-gray-900 uppercase">Subtotal del Periodo</label>
@@ -318,7 +384,7 @@ include 'includes/head.php';
                     <div class="flex space-x-2">
                         <div class="relative flex-1 group">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 font-bold">$</span>
-                            <input type="number" id="panel-input-total" step="0.01" class="w-full bg-blue-50/50 border border-blue-100 rounded-xl pl-8 pr-3 py-2 text-base font-black text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner" />
+                            <input type="number" id="panel-input-total" step="0.01" class="w-full bg-blue-50/50 border border-blue-100 rounded-xl pl-8 pr-3 py-2 text-base font-black text-blue-700 focus:outline-none transition-all shadow-inner cursor-not-allowed" readonly />
                         </div>
                         <button id="btn-recalculate-total" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 rounded-xl transition-all shadow-sm flex items-center justify-center group" title="Recalcular con tarifas vigentes">
                             <i data-lucide="calculator" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
@@ -377,7 +443,7 @@ include 'includes/head.php';
     <script src="js/historialini.js"></script>
     <!-- MODAL DE HISTÓRICO EXPANDIDO -->
     <div id="modal-history-expanded" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0" id="modal-history-backdrop"></div>
+        <div class="fixed inset-0 bg-slate-900/60 transition-opacity opacity-0" id="modal-history-backdrop"></div>
         
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden transform scale-95 opacity-0 transition-all duration-300 flex flex-col z-[70]" id="modal-history-content">
             <!-- Header Modal -->
@@ -448,7 +514,7 @@ include 'includes/head.php';
 
     <!-- MODAL LOG DE MOVIMIENTOS (Pagos / Adeudos) -->
     <div id="modal-movements-log" class="fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0" id="modal-log-backdrop"></div>
+        <div class="fixed inset-0 bg-slate-900/60 transition-opacity opacity-0" id="modal-log-backdrop"></div>
         
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden transform scale-95 opacity-0 transition-all duration-300 flex flex-col z-[80]" id="modal-log-content">
             <!-- Header -->
@@ -508,13 +574,13 @@ include 'includes/head.php';
 
     <!-- GLOBAL HELP MODAL / SMART MANUAL -->
     <div id="modal-global-help" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0" id="modal-help-backdrop"></div>
+        <div class="fixed inset-0 bg-slate-900/60 transition-opacity opacity-0" id="modal-help-backdrop"></div>
         
         <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 flex flex-col z-[110]" id="modal-help-content">
             <!-- Header Premium -->
             <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-700">
                 <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/30">
+                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center border border-white/30">
                         <i data-lucide="book-open" class="w-6 h-6 text-white"></i>
                     </div>
                     <div>
@@ -546,7 +612,7 @@ include 'includes/head.php';
 
     <!-- MODAL DE NOTAS / CHAT INTERNO -->
     <div id="modal-notes-chat" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0" id="modal-notes-backdrop"></div>
+        <div class="fixed inset-0 bg-slate-900/60 transition-opacity opacity-0" id="modal-notes-backdrop"></div>
         
         <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden transform scale-95 opacity-0 transition-all duration-300 flex flex-col z-[110]" id="modal-notes-content">
             <!-- Header Chat -->
@@ -630,7 +696,7 @@ include 'includes/head.php';
 
     <!-- CONSOLA DE TRANSMISIÓN MASIVA (Progress Monitor) -->
     <div id="modal-transmission-console" class="fixed inset-0 z-[110] hidden flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity opacity-0" id="transmission-backdrop"></div>
+        <div class="fixed inset-0 bg-slate-950/80 transition-opacity opacity-0" id="transmission-backdrop"></div>
         
         <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 flex flex-col z-[120]" id="transmission-content">
             <!-- Header -->
@@ -675,7 +741,7 @@ include 'includes/head.php';
     <script src="js/app.js"></script>
     <!-- MODAL VISOR DE EVIDENCIA (M3) -->
     <div id="modal-evidence-viewer" class="fixed inset-0 z-[110] flex items-center justify-center p-4 hidden">
-        <div id="modal-evidence-backdrop" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+        <div id="modal-evidence-backdrop" class="absolute inset-0 bg-slate-900/60 transition-opacity duration-300 opacity-0"></div>
         <div id="modal-evidence-content" class="bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden relative z-10 transform transition-all duration-300 scale-95 opacity-0 border border-white/20">
             <!-- Header -->
             <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-slate-50/50">
@@ -705,9 +771,103 @@ include 'includes/head.php';
         </div>
     </div>
 
+    <!-- MODAL ENVIAR NOTIFICACIÓN / CORREO -->
+    <div id="modal-send-email" class="fixed inset-0 z-[120] flex items-center justify-center p-4 hidden">
+        <div id="modal-email-backdrop" class="absolute inset-0 bg-slate-900/60 transition-opacity duration-300 opacity-0" onclick="historial.closeEmailModal()"></div>
+        <div id="modal-email-content" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden relative z-10 transform transition-all duration-300 scale-95 opacity-0 border border-white/20 flex flex-col max-h-[90vh]">
+            
+            <!-- Header -->
+            <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-indigo-50/50 flex-shrink-0">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                        <i data-lucide="mail" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-indigo-900 tracking-tight">Comunicación con el Cliente</h3>
+                        <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Enviar Recibo y Notificación</p>
+                    </div>
+                </div>
+                <button onclick="historial.closeEmailModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-indigo-100 text-indigo-400 transition-all">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
+                <input type="hidden" id="email-dept-id" value="">
+                
+                <!-- Destinatario -->
+                <div>
+                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Destinatario(s)</label>
+                    <select id="email-recipient-type" onchange="historial.handleEmailTypeChange()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
+                        <option value="ambos">Enviar a los correos registrados (Ambos)</option>
+                        <option value="primario">Enviar al correo primario</option>
+                        <option value="secundario">Enviar al correo secundario</option>
+                        <option value="otro">Enviar a otro correo...</option>
+                    </select>
+                </div>
+                
+                <!-- Custom Email Input (Hidden by default) -->
+                <div id="custom-email-container" class="hidden">
+                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Escriba el correo destinatario</label>
+                    <input type="email" id="email-custom-address" placeholder="ejemplo@correo.com" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" />
+                </div>
+                
+                <!-- Tipo de Mensaje -->
+                <div>
+                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Tipo de Mensaje</label>
+                    <div class="flex items-center space-x-6">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="email-msg-type" value="preconfigurado" checked onchange="historial.handleEmailMsgTypeChange()" class="w-4 h-4 text-indigo-600 bg-slate-50 border-slate-300 focus:ring-indigo-500">
+                            <span class="ml-2 text-sm font-bold text-slate-700">Mensaje Preconfigurado</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="email-msg-type" value="personalizado" onchange="historial.handleEmailMsgTypeChange()" class="w-4 h-4 text-indigo-600 bg-slate-50 border-slate-300 focus:ring-indigo-500">
+                            <span class="ml-2 text-sm font-bold text-slate-700">Mensaje Personalizado</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Asunto -->
+                <div>
+                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Asunto del Correo</label>
+                    <input type="text" id="email-subject" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" />
+                </div>
+                
+                <!-- Mensaje -->
+                <div>
+                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Mensaje</label>
+                    <textarea id="email-message" rows="5" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"></textarea>
+                </div>
+                
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-start space-x-3">
+                    <i data-lucide="paperclip" class="w-5 h-5 text-blue-500 mt-0.5"></i>
+                    <div class="flex-1">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="email-attach-pdf" checked class="w-4 h-4 text-blue-600 bg-white border-blue-300 rounded focus:ring-blue-500 focus:ring-2 mr-2 cursor-pointer">
+                            <span class="text-xs font-bold text-blue-800 uppercase tracking-widest">Adjuntar recibo de este periodo</span>
+                        </label>
+                        <p class="text-[11px] font-medium text-blue-600 leading-relaxed mt-1">
+                            Al estar seleccionado, el sistema generará el PDF al vuelo y lo adjuntará automáticamente al correo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-8 py-5 bg-slate-50 flex justify-end space-x-3 flex-shrink-0">
+                <button onclick="historial.closeEmailModal()" class="px-6 py-3 bg-white text-slate-600 text-xs font-black rounded-2xl hover:bg-slate-100 transition-all border border-slate-200 uppercase tracking-widest">Cancelar</button>
+                <button id="btn-send-custom-email" onclick="historial.sendCustomEmail()" class="px-8 py-3 bg-indigo-600 text-white text-xs font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center space-x-2 uppercase tracking-widest">
+                    <span>Enviar Correo</span>
+                    <i data-lucide="send" class="w-4 h-4 ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DIAGNÓSTICO DE DESCARGA ZIP -->
     <div id="modal-zip-diagnosis" class="fixed inset-0 z-[120] flex items-center justify-center p-4 hidden">
-        <div id="modal-zip-backdrop" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+        <div id="modal-zip-backdrop" class="absolute inset-0 bg-slate-900/60 transition-opacity duration-300 opacity-0"></div>
         <div id="modal-zip-content" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden relative z-10 transform transition-all duration-300 scale-95 opacity-0 border border-white/20">
             <!-- Header Alerta -->
             <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-rose-50/50">
@@ -741,8 +901,8 @@ include 'includes/head.php';
         </div>
     </div>
 
-    <script src="js/historial_config.js"></script>
-    <script src="js/historial.js"></script>
-    <script src="js/historialini.js"></script>
+    <script src="js/historial_config.js?v=<?php echo time(); ?>"></script>
+    <script src="js/historial.js?v=<?php echo time(); ?>"></script>
+    <script src="js/historialini.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

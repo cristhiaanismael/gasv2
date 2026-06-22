@@ -15,6 +15,7 @@ use App\Models\Cortes as CorteModel;
 use App\Models\Datos_empresa as DatosEmpresaModel;
 use App\Models\Precio_litros as PrecioLitroModel;
 use App\Models\Edificios as EdificioModel;
+use App\Models\Clientes as ClienteModel;
 
 class Historial extends BaseController
 {
@@ -27,6 +28,7 @@ class Historial extends BaseController
     protected $empresaModel;
     protected $precioModel;
     protected $edificioModel;
+    protected $clienteModel;
 
     public function __construct()
     {
@@ -37,6 +39,7 @@ class Historial extends BaseController
         $this->empresaModel = new DatosEmpresaModel();
         $this->precioModel  = new PrecioLitroModel();
         $this->edificioModel = new EdificioModel();
+        $this->clienteModel  = new ClienteModel();
     }
 
     /**
@@ -52,7 +55,9 @@ class Historial extends BaseController
             // Verificar si el PDF existe físicamente para cada departamento
             foreach ($result as &$row) {
                 $filename = "recibo_gas_" . $row['id_departamento'] . "_" . str_replace(' ', '_', $periodo) . ".pdf";
-                $row['pdf_exists'] = file_exists(FCPATH . 'recibos/' . $filename);
+                $filepath = FCPATH . 'recibos/' . $filename;
+                clearstatcache(true, $filepath);
+                $row['pdf_exists'] = file_exists($filepath);
             }
 
             return $this->respond([
@@ -61,6 +66,34 @@ class Historial extends BaseController
             ]);
         } catch (\Exception $e) {
             log_message('error', '[Historial] Error getList: ' . $e->getMessage());
+            return $this->fail($e->getMessage());
+        }
+    }
+
+    /**
+     * Obtiene el consumo M3 del periodo anterior de forma separada y optimizada.
+     * GET api/historial/edificio-anterior/(:num)
+     */
+    public function getPreviousList($id_edificio)
+    {
+        try {
+            $periodoRow        = $this->corteModel->getActiveFullRow();
+            $prevPeriodo       = null;
+            $fechaInicioActivo = null;
+
+            if ($periodoRow) {
+                $fechaInicioActivo = $periodoRow['fecha_inicio'];
+                // BUG6 FIX: Query movida al Modelo (Cortes::getPeriodoAnterior)
+                $prevRow     = $this->corteModel->getPeriodoAnterior($periodoRow['fecha_inicio']);
+                $prevPeriodo = $prevRow['periodo'] ?? null;
+            }
+
+            $fechaInicio = $fechaInicioActivo ?: date('Y-m-d H:i:s');
+            $result      = $this->deptModel->getPreviousDataByBuilding($id_edificio, $prevPeriodo, $fechaInicio);
+
+            return $this->respond($result);
+        } catch (\Exception $e) {
+            log_message('error', '[Historial] Error getPreviousList: ' . $e->getMessage());
             return $this->fail($e->getMessage());
         }
     }
@@ -80,10 +113,8 @@ class Historial extends BaseController
             $depto      = $this->deptModel->getInfoCompleta($id_departamento);
             $lectura    = $this->lecturaModel->getLecturaByPeriodo($id_departamento, $periodo);
             $saldoTotal = $this->movModel->getSaldoTotal($id_departamento);
-            $historia   = $this->lecturaModel->getHistorialReciente($id_departamento, 12);
-
-            // NUEVO: Obtener Muro de Comentarios Global (Últimos 12 meses consolidado)
-            $notasGlobales = $this->lecturaModel->getAllNotas($id_departamento, 12);
+            // Nota: historial y notas se cargan via endpoints separados
+            // (sidebar-history y sidebar-notes) para no bloquear la respuesta principal.
             
             // 3. Sumar abonos del periodo (Lógica encapsulada en el Modelo)
             $abonosPeriodo = $this->movModel->getSumAbonosByRange(
@@ -91,6 +122,12 @@ class Historial extends BaseController
                 $periodRow['fecha_inicio'] ?? null, 
                 $periodRow['fecha_fin'] ?? null
             );
+
+            // 3.5. Calcular Saldo Inicial Real utilizando el Modelo de Movimientos (MVC puro y estricto)
+            $saldoInicial = $this->movModel->getSaldoInicialAntesDeFecha($id_departamento, $periodRow['fecha_inicio'] ?? null);
+
+            // 3.6. Último abono para refrescar la tabla después de pagos
+            $ultimoAbono = $this->movModel->getUltimoAbono($id_departamento);
 
             // 4. Configuración de Precios (Lógica de Modelo centralizada)
             $idEdificio = $depto['id_edificio'] ?? 0;
@@ -104,6 +141,8 @@ class Historial extends BaseController
                 'depto'            => $depto,
                 'lectura'          => $lectura,
                 'saldo'            => (float)$saldoTotal,
+                'saldo_inicial'    => (float)$saldoInicial,
+                'abonos_periodo'   => (float)$abonosPeriodo,
                 'historico'        => [], 
                 'periodo'          => $periodo,
                 'notas_globales'   => [], 
@@ -112,12 +151,118 @@ class Historial extends BaseController
                     'fecha_fin'    => $periodRow['fecha_fin'] ?? null
                 ],
                 'config'           => $tecnico,
-                'lec_ant_sugerida' => $lecAntSugerida
+                'lec_ant_sugerida' => $lecAntSugerida,
+                'ultimo_abono'     => $ultimoAbono ? [
+                    'monto' => $ultimoAbono['monto'],
+                    'fecha' => $ultimoAbono['fecha']
+                ] : null
             ]);
 
         } catch (\Exception $e) {
             log_message('error', '[Historial] Error MVC getDetails: ' . $e->getMessage());
-            return $this->fail('Error interno al cargar detalles: ' . $e->getMessage());
+            return $this->fail($e->getMessage());
+        }
+    }
+
+    /**
+     * Obtiene el desglose de los últimos 10 movimientos para justificar el Saldo Anterior
+     * GET api/historial/breakdown-saldo/(:num)
+     */
+    public function getBreakdownSaldo($id_departamento)
+    {
+        try {
+            $periodRow = $this->corteModel->getActiveFullRow();
+            $fechaInicio = $periodRow['fecha_inicio'] ?? date('Y-m-d H:i:s');
+            
+            $movs = $this->movModel->getBreakdownSaldoMovs($id_departamento, $fechaInicio);
+                                   
+            return $this->respond($movs);
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage());
+        }
+    }
+
+    /**
+     * Obtiene el desglose del último recibo anterior (para la columna Recibo Ant.)
+     * GET api/historial/breakdown-recibo-ant/(:num)
+     */
+    public function getBreakdownReciboAnt($id_departamento)
+    {
+        try {
+            $periodoRow = $this->corteModel->getActiveFullRow();
+            $prevRow = $periodoRow ? $this->corteModel->getPeriodoAnterior($periodoRow['fecha_inicio']) : null;
+            $prevPeriodo = $prevRow['periodo'] ?? null;
+            
+            if (!$prevPeriodo) {
+                return $this->respond([]);
+            }
+
+            // Buscar la lectura exacta de ese periodo, asegurando que sea de 2026 en adelante
+            $lectura = $this->lecturaModel->where('id_departamento', $id_departamento)
+                                          ->where('periodo', $prevPeriodo)
+                                          ->where('fecha_register >=', '2026-01-01 00:00:00')
+                                          ->first();
+                                          
+            if (!$lectura) {
+                return $this->respond([]);
+            }
+
+            // Construir el desglose
+            $desglose = [];
+            
+            // Consumo de gas
+            $montoGas = (float)($lectura['monto'] ?? 0);
+            if ($montoGas > 0) {
+                $desglose[] = [
+                    'descripcion' => 'Consumo de Gas (' . (float)($lectura['consumo_m3'] ?? 0) . ' m3)',
+                    'monto' => $montoGas,
+                    'tipo' => 'cargo'
+                ];
+            }
+            
+            // Cuota de administración
+            $cuotaAdmin = (float)($lectura['cuota_admin'] ?? 0);
+            if ($cuotaAdmin > 0) {
+                $desglose[] = [
+                    'descripcion' => 'Cuota de Administración',
+                    'monto' => $cuotaAdmin,
+                    'tipo' => 'cargo'
+                ];
+            }
+            
+            // Cargos adicionales
+            $cargosAdd = (float)($lectura['cargos_add'] ?? 0);
+            if ($cargosAdd > 0) {
+                $desglose[] = [
+                    'descripcion' => 'Cargos Adicionales',
+                    'monto' => $cargosAdd,
+                    'tipo' => 'cargo'
+                ];
+            }
+            
+            // Saldo pendiente que venía arrastrando ESE recibo
+            // El total a pagar es monto + cuota_admin + cargos_add + saldo_pendiente
+            $totalCobrado = (float)($lectura['total_a_pagar'] ?? 0);
+            $sumaCargos = $montoGas + $cuotaAdmin + $cargosAdd;
+            $saldoPendienteArrastrado = $totalCobrado - $sumaCargos;
+            
+            if (abs($saldoPendienteArrastrado) > 0.05) {
+                $desglose[] = [
+                    'descripcion' => 'Saldo Pendiente Anterior',
+                    'monto' => $saldoPendienteArrastrado,
+                    'tipo' => $saldoPendienteArrastrado > 0 ? 'cargo' : 'abono'
+                ];
+            }
+            
+            return $this->respond([
+                'total' => $totalCobrado,
+                'periodo' => $lectura['periodo'],
+                'fecha' => $lectura['fecha_register'] ?? null,
+                'desglose' => $desglose
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage());
         }
     }
 
@@ -140,8 +285,15 @@ class Historial extends BaseController
                 log_message('info', "[Historial] PDF Regenerado: $filename borrado para recreación.");
             }
 
-            // Si ya existe y no se forzó, servir el archivo directo
+            // Si ya existe y no se forzó, servir el archivo directo o JSON si es AJAX
             if (file_exists($filePath) && !$force) {
+                if ($this->request->getGet('ajax') == '1') {
+                    return $this->respond([
+                        'status' => 'success',
+                        'message' => 'Recibo ya existía y está listo',
+                        'pdf_url' => base_url("api/historial/pdf/$id_departamento")
+                    ]);
+                }
                 return $this->response->setHeader('Content-Type', 'application/pdf')
                                       ->setBody(file_get_contents($filePath));
             }
@@ -221,104 +373,62 @@ class Historial extends BaseController
     public function updateReading()
     {
         try {
-            $json = $this->request->getJSON();
-            $id_lectura = $json->id_lectura ?? null;
-            if (!$id_lectura) return $this->fail('ID de lectura no proporcionado');
-
-            // Soporte para FormData (para archivos) o JSON
-            $id_lectura   = $this->request->getPost('id_lectura') ?? null;
-            $lectura_fin  = $this->request->getPost('lectura_fin') ?? null;
-            $cargos_add   = $this->request->getPost('cargos_add') ?? 0;
-            $ajuste       = $this->request->getPost('ajuste') ?? 0;
-            $nota         = $this->request->getPost('nota') ?? null;
-            $total_manual = $this->request->getPost('total_a_pagar') ?? null;
+            // Soporte unificado: FormData primero (cuando viene con foto), luego JSON puro
+            $id_lectura  = $this->request->getPost('id_lectura');
+            $lectura_fin = $this->request->getPost('lectura_fin');
+            $cargos_add  = $this->request->getPost('cargos_add') ?? 0;
+            $ajuste      = $this->request->getPost('ajuste') ?? 0;
+            $nota        = $this->request->getPost('nota');
 
             if (!$id_lectura) {
                 $json = $this->request->getJSON();
                 if ($json) {
-                    $id_lectura   = $json->id_lectura ?? null;
-                    $lectura_fin  = $json->lectura_fin ?? null;
-                    $cargos_add   = $json->cargos_add ?? 0;
-                    $ajuste       = $json->ajuste ?? 0;
-                    $nota         = $json->nota ?? null;
-                    $total_manual = $json->total_a_pagar ?? null;
+                    $id_lectura  = $json->id_lectura ?? null;
+                    $lectura_fin = $json->lectura_fin ?? null;
+                    $cargos_add  = $json->cargos_add ?? 0;
+                    $ajuste      = $json->ajuste ?? 0;
+                    $nota        = $json->nota ?? null;
                 }
             }
 
             if (!$id_lectura) return $this->fail('ID de lectura es requerido');
 
-            // 1. Obtener la lectura actual y configuración del edificio
+            // 1. Obtener datos de contexto via Modelos (responsabilidad del Controlador: orquestar)
             $lectura = $this->lecturaModel->find($id_lectura);
             if (!$lectura) return $this->failNotFound('Lectura no encontrada');
 
-            $depto = $this->deptModel->getWithBuilding($lectura['id_departamento']);
+            $depto  = $this->deptModel->getWithBuilding($lectura['id_departamento']);
             $config = $this->edificioModel->getConfiguracion($depto['id_edificio']);
 
-            // 2. Procesar Archivo (Foto) si viene
-            $fotoName = $lectura['foto']; // Mantener anterior por defecto
-            $file = $this->request->getFile('foto');
+            // 2. Procesar Foto (el manejo de archivos es responsabilidad del Controlador)
+            $fotoName = $lectura['foto'];
+            $file     = $this->request->getFile('foto');
             if ($file && $file->isValid() && !$file->hasMoved()) {
-                $newName = $file->getRandomName();
+                $newName    = $file->getRandomName();
                 $uploadPath = FCPATH . 'uploads/lecturas';
                 if (!is_dir($uploadPath)) mkdir($uploadPath, 0777, true);
                 $file->move($uploadPath, $newName);
                 $fotoName = $newName;
             }
 
-            // 3. Re-calcular (MVC Style)
-            $lec_ini = (float)$lectura['lectura_ini'];
-            $lec_fin = ($lectura_fin !== null) ? (float)$lectura_fin : (float)$lectura['lectura_fin'];
-            
-            $m3 = max(0, $lec_fin - $lec_ini);
-            $lt = $m3 * (float)$config['factor'];
-            $montoGas = $lt * (float)$config['precioLitro'];
+            $total_a_pagar = $this->request->getPost('total_a_pagar') ?? ($json->total_a_pagar ?? null);
 
-            $data = [
-                'lectura_fin' => $lec_fin,
-                'cargos_add'  => (float)$cargos_add,
-                'ajuste'      => (float)$ajuste,
-                'foto'        => $fotoName
+            // 3. Delegar TODO el cálculo y la transacción al Modelo (BUG1 + BUG5 FIX)
+            $payload = [
+                'lectura_fin'   => $lectura_fin,
+                'cargos_add'    => $cargos_add,
+                'ajuste'        => $ajuste,
+                'nota'          => $nota,
+                'foto'          => $fotoName,
+                'total_a_pagar' => $total_a_pagar
             ];
-            
-            if ($nota !== null) {
-                $data['nota'] = $nota;
-            }
 
-            $data['consumo_m3']      = $m3;
-            $data['consumos_litros'] = $lt;
-            $data['monto']           = $montoGas;
-            
-            // 3. Cálculo del Total del Periodo (Exclusivo de esta lectura)
-            // No incluimos adeudos anteriores aquí para evitar duplicidad en movimientos.
-            $data['total_a_pagar'] = $montoGas + (float)($config['cuotaAdmin'] ?? 0) + (float)$data['cargos_add'] + (float)$data['ajuste'];
-
-            // 3. Transacción: Actualizar Lectura y Movimientos
-            $this->lecturaModel->db->transStart();
-            
-            $this->lecturaModel->update($id_lectura, $data);
-            
-            // Sincronizar con Movimientos (Desglosado en múltiples registros según petición del usuario)
-            // Lógica encapsulada en el Modelo para mantener el controlador limpio
-            $this->movModel->syncReadingMovements(
-                $id_lectura, 
-                $lectura['id_departamento'], 
-                $montoGas, 
-                (float)($config['cuotaAdmin'] ?? 0), 
-                (float)$data['cargos_add'], 
-                (float)$data['ajuste'],
-                $depto['num_edificio'] . " - " . ($lectura['periodo'] ?? 'Actual')
-            );
-            
-            $this->lecturaModel->db->transComplete();
-
-            if ($this->lecturaModel->db->transStatus() === false) {
-                return $this->fail('Error al actualizar la base de datos');
-            }
+            $result = $this->lecturaModel->actualizarLectura($id_lectura, $lectura, $payload, $config, $this->movModel);
 
             return $this->respond([
                 'status'  => 'success',
-                'total'   => number_format($data['total_a_pagar'], 2, '.', ''),
-                'lectura' => $this->lecturaModel->find($id_lectura)
+                'total'   => number_format($result['total_a_pagar'], 2, '.', ''),
+                'lectura' => $result['lectura']
             ]);
 
         } catch (\Exception $e) {
@@ -332,30 +442,28 @@ class Historial extends BaseController
     public function registerPayment()
     {
         try {
-            $json = $this->request->getJSON();
+            $json            = $this->request->getJSON();
             $id_departamento = $json->id_departamento ?? null;
-            $monto = $json->monto ?? 0;
+            $monto           = $json->monto ?? 0;
+            $descripcion     = $json->descripcion ?? 'Pago registrado';
+            $id_lectura      = $json->id_lectura ?? null;
 
             if (!$id_departamento || $monto <= 0) {
                 return $this->fail('Datos de pago inválidos');
             }
 
-            $data = [
-                'id_departamento' => $id_departamento,
-                'tipo'            => 'pago', // USAR 'pago' PARA CUMPLIR CON ENUM ('cargo','pago','ajuste')
-                'monto'           => $monto,
-                'descripcion'     => $json->descripcion ?? 'Pago registrado',
-                'referencia_id'   => $json->id_lectura ?? null,
-                'referencia_tipo' => $json->id_lectura ? 'lectura' : null,
-                'fecha'           => date('Y-m-d H:i:s')
-            ];
-
-            if ($this->movModel->insert($data)) {
-                return $this->respondCreated(['status' => 'success', 'message' => 'Pago registrado']);
+            // BUG8 FIX: Lógica de negocio delegada al Modelo
+            if ($this->movModel->registrarPago($id_departamento, $monto, $descripcion, $id_lectura)) {
+                // Devolver el saldo actualizado para que el JS pueda refrescar la tabla sin otro fetch
+                $nuevoSaldo = $this->movModel->getSaldoTotal($id_departamento);
+                return $this->respondCreated([
+                    'status'      => 'success',
+                    'message'     => 'Pago registrado',
+                    'saldo_total' => (float)$nuevoSaldo
+                ]);
             }
-            
-            // SI LLEGAMOS AQUÍ ES QUE HUBO UN ERROR EN EL INSERT (Probablemente por TIPO inválido)
-            throw new \Exception("Error Fatal: No se pudo insertar el movimiento. Verifique el campo 'tipo'.");
+
+            throw new \Exception('No se pudo insertar el movimiento de pago.');
         } catch (\Exception $e) {
             return $this->fail($e->getMessage());
         }
@@ -367,28 +475,27 @@ class Historial extends BaseController
     public function registerAdjustment()
     {
         try {
-            $json = $this->request->getJSON();
+            $json            = $this->request->getJSON();
             $id_departamento = $json->id_departamento ?? null;
-            $monto = $json->monto ?? 0;
+            $monto           = $json->monto ?? 0;
+            $descripcion     = $json->descripcion ?? null;
 
             if (!$id_departamento || $monto == 0) {
                 return $this->fail('Monto de ajuste inválido');
             }
 
-            $esRecargo = ($monto > 0);
-            $data = [
-                'id_departamento' => $id_departamento,
-                'tipo'            => $esRecargo ? 'cargo' : 'ajuste', // cargo(+) aumenta deuda | ajuste(-) disminuye
-                'monto'           => abs($monto),
-                'descripcion'     => $json->descripcion ?? ($esRecargo ? 'Ajuste manual (Recargo)' : 'Ajuste manual (Rebaja)'),
-                'fecha'           => date('Y-m-d H:i:s')
-            ];
-
-            if ($this->movModel->insert($data)) {
-                return $this->respondCreated(['status' => 'success', 'message' => 'Ajuste registrado']);
+            // BUG8 FIX: Lógica de negocio delegada al Modelo
+            if ($this->movModel->registrarAjuste($id_departamento, $monto, $descripcion)) {
+                // Devolver el saldo actualizado para que el JS pueda refrescar la tabla sin otro fetch
+                $nuevoSaldo = $this->movModel->getSaldoTotal($id_departamento);
+                return $this->respondCreated([
+                    'status'      => 'success',
+                    'message'     => 'Ajuste registrado',
+                    'saldo_total' => (float)$nuevoSaldo
+                ]);
             }
-            
-            throw new \Exception("Error Fatal: No se pudo insertar el ajuste. Verifique el campo 'tipo'.");
+
+            throw new \Exception('No se pudo insertar el movimiento de ajuste.');
         } catch (\Exception $e) {
             return $this->fail($e->getMessage());
         }
@@ -397,21 +504,10 @@ class Historial extends BaseController
     public function getMovimientos($id_departamento)
     {
         try {
-            $movs = $this->movModel->getMovimientosConPeriodo($id_departamento);
-                                  
-            $totalCargos = 0;
-            $totalAbonos = 0;
-            foreach ($movs as $m) {
-                if ($m['tipo'] == 'cargo') $totalCargos += (float)$m['monto'];
-                else $totalAbonos += (float)$m['monto'];
-            }
-
-            return $this->respond([
-                'totalCargos' => $totalCargos,
-                'totalAbonos' => $totalAbonos,
-                'saldoNeto'   => $totalCargos - $totalAbonos,
-                'movimientos' => $movs
-            ]);
+            // BUG7 FIX: Cálculo de totales delegado al Modelo (Movimientos::getTotalesMovimientos)
+            return $this->respond(
+                $this->movModel->getTotalesMovimientos($id_departamento)
+            );
         } catch (\Exception $e) {
             return $this->fail($e->getMessage());
         }
@@ -560,9 +656,241 @@ class Historial extends BaseController
                 $errorMsg = $body['errors'][0]['message'] ?? "Error desconocido en SendGrid";
                 return ['status' => false, 'message' => "SendGrid rechazó el envío: $errorMsg (Código $sc)"];
             }
-
         } catch (\Exception $e) {
             log_message('error', 'Excepción Crítica SendGrid: ' . $e->getMessage());
+            return ['status' => false, 'message' => "Fallo técnico en el motor de envío: " . $e->getMessage()];
+        }
+    }
+
+    /**
+     * GET api/historial/email-template
+     * Obtiene y resuelve la plantilla de correo para un departamento en un periodo.
+     */
+    public function getEmailTemplate()
+    {
+        $id_departamento = $this->request->getGet('id_departamento');
+        
+        if (!$id_departamento) {
+            return $this->fail('ID de departamento requerido');
+        }
+
+        // Obtener datos del departamento
+        $depto = $this->deptModel->getInfoCompleta($id_departamento);
+        if (!$depto) {
+            return $this->fail('Departamento no encontrado');
+        }
+
+        $id_edificio = $depto['id_edificio'];
+
+        // Obtener el periodo activo
+        $activeRow = $this->corteModel->getActiveFullRow();
+        $periodo_nombre = $activeRow ? $activeRow['periodo'] : 'Periodo Actual';
+
+        // Obtener la lectura para ese periodo (si existe) para las etiquetas de totales
+        $lectura = null;
+        if ($activeRow) {
+            $lectura = $this->lecturaModel->where('id_departamento', $id_departamento)
+                                    ->where('periodo', $periodo_nombre)
+                                    ->first();
+        }
+
+        // Obtener saldo actual del estado de cuenta
+        $db = \Config\Database::connect();
+        $estado = $db->table('estado_cuenta')->where('id_departamento', $id_departamento)->get()->getRowArray();
+        $saldo_actual = $estado ? floatval($estado['saldo_actual']) : 0;
+
+        // Cargar modelo de configuracion y obtener plantilla
+        $configModel = new \App\Models\ConfiguracionCobranzaModel();
+        $template = $configModel->getTemplateResolved($id_departamento, $id_edificio);
+
+        if (!$template) {
+            return $this->fail('No hay plantilla configurada.');
+        }
+
+        $asunto = $template['asunto'];
+        $mensaje = $template['mensaje'];
+
+        // Resolver etiquetas
+        $nombre_titular = trim(($depto['nombre'] ?? '') . ' ' . ($depto['ape_pat'] ?? ''));
+        if (!$nombre_titular) $nombre_titular = 'Cliente';
+
+        $total_periodo = $lectura ? floatval($lectura['total_a_pagar'] ?? 0) : 0;
+
+        // Obtener lectura anterior
+        $prevRow = $activeRow ? $this->corteModel->getPeriodoAnterior($activeRow['fecha_inicio']) : null;
+        $prevPeriodo = $prevRow['periodo'] ?? null;
+        $lecturaAnt = null;
+        if ($prevPeriodo) {
+            $lecturaAnt = $this->lecturaModel->where('id_departamento', $id_departamento)
+                                          ->where('periodo', $prevPeriodo)
+                                          ->first();
+        }
+        $total_periodo_ant = $lecturaAnt ? floatval($lecturaAnt['total_a_pagar'] ?? 0) : 0;
+        $saldo_cierre_ant = $saldo_actual - $total_periodo; // Saldo antes de los cargos de este mes
+
+        // Diccionario de meses
+        $meses = ['01'=>'Enero','02'=>'Febrero','03'=>'Marzo','04'=>'Abril','05'=>'Mayo','06'=>'Junio','07'=>'Julio','08'=>'Agosto','09'=>'Septiembre','10'=>'Octubre','11'=>'Noviembre','12'=>'Diciembre'];
+
+        $mes_inicio = $activeRow ? $meses[date('m', strtotime($activeRow['fecha_inicio'] ?? date('Y-m-d')))] : '';
+        $mes_fin = $activeRow ? $meses[date('m', strtotime($activeRow['fecha_fin'] ?? date('Y-m-d')))] : '';
+        $mes_siguiente = $activeRow ? $meses[date('m', strtotime('+1 month', strtotime($activeRow['fecha_fin'] ?? date('Y-m-d'))))] : '';
+
+        // Diccionario de reemplazo
+        $tags = [
+            '{{nombre_titular}}' => $nombre_titular,
+            '{{edificio}}' => $depto['num_edificio'] ?? 'Edificio',
+            '{{numero_departamento}}' => $depto['num_departamento'] ?? '0',
+            '{{saldo_actual}}' => number_format($saldo_actual, 2),
+            '{{total_periodo}}' => number_format($total_periodo, 2),
+            '{{corte}}' => $activeRow ? ($activeRow['fecha_fin'] ?? '') : '',
+            '{{mes_curso}}' => $periodo_nombre,
+            '{{mes_inicio_periodo}}' => $mes_inicio,
+            '{{mes_fin_periodo}}' => $mes_fin,
+            '{{mes_siguiente}}' => $mes_siguiente,
+            '{{total_periodo_ant}}' => number_format($total_periodo_ant, 2),
+            '{{saldo_cierre_ant}}' => number_format($saldo_cierre_ant, 2)
+        ];
+
+        foreach ($tags as $tag => $value) {
+            $asunto = str_replace($tag, $value, $asunto);
+            $mensaje = str_replace($tag, $value, $mensaje);
+        }
+
+        return $this->respond([
+            'status' => true,
+            'data' => [
+                'asunto' => $asunto,
+                'mensaje' => $mensaje
+            ]
+        ]);
+    }
+
+    /**
+     * POST api/historial/enviar-custom-email
+     * Envía un correo personalizado con asunto, mensaje y adjunto del recibo.
+     */
+    public function enviarCustomEmail()
+    {
+        $id_departamento = $this->request->getPost('id_departamento');
+        $tipo_envio = $this->request->getPost('tipo_envio');
+        $custom_email = $this->request->getPost('custom_email');
+        $subject = $this->request->getPost('subject');
+        $message = $this->request->getPost('message');
+        $adjuntar_recibo = $this->request->getPost('adjuntar_recibo') === '1';
+
+        if (!$id_departamento || !$tipo_envio || !$subject || !$message) {
+            return $this->fail('Faltan datos requeridos para el envío');
+        }
+
+        // Obtener el periodo activo para generar el PDF (y para el nombre del archivo)
+        $activeRow = $this->corteModel->getActiveFullRow();
+        if (!$activeRow) return $this->fail('No hay un periodo de corte activo');
+        $periodo = $activeRow['periodo'];
+
+        $pdfOutput = null;
+        $filename = "recibo_gas_" . $id_departamento . "_" . str_replace(' ', '_', $periodo) . ".pdf";
+
+        if ($adjuntar_recibo) {
+            // 1. Generar PDF (lo sacamos en memoria)
+            $pdfOutput = $this->obtenerPdfString($id_departamento);
+            if (!$pdfOutput) {
+                return $this->fail('No se pudo generar el documento PDF para adjuntar.');
+            }
+
+            $filepath = FCPATH . 'recibos/' . $filename;
+            
+            // Guardarlo físicamente por si no existía (actúa también como un "Generar PDF" implícito)
+            file_put_contents($filepath, $pdfOutput);
+            clearstatcache(true, $filepath);
+        }
+
+        // 2. Enviar el correo
+        $resultadoEmail = $this->enviarEmailPersonalizado(
+            $id_departamento, 
+            $pdfOutput, 
+            $filename, 
+            $tipo_envio, 
+            $custom_email, 
+            $subject, 
+            $message
+        );
+
+        if ($resultadoEmail['status']) {
+            return $this->respond(['status' => true, 'message' => 'El correo ha sido enviado con éxito.']);
+        } else {
+            return $this->fail($resultadoEmail['message']);
+        }
+    }
+
+    private function enviarEmailPersonalizado($id_departamento, $pdfContent, $filename, $tipo_envio, $custom_email, $subject, $messageText)
+    {
+        try {
+            $depto = $this->deptModel->getInfoCompleta($id_departamento);
+            $nombre = $depto['nombre'] ?? 'Cliente';
+            
+            $destinatarios = [];
+            
+            if ($tipo_envio === 'otro') {
+                if (filter_var($custom_email, FILTER_VALIDATE_EMAIL)) {
+                    $destinatarios[] = ['email' => $custom_email, 'name' => $nombre];
+                }
+            } else {
+                $pEmail = $depto['correo'] ?? null;
+                $sEmail = $depto['correo_2'] ?? null;
+                
+                $pValid = $pEmail && $pEmail !== '0' && filter_var($pEmail, FILTER_VALIDATE_EMAIL);
+                $sValid = $sEmail && $sEmail !== '0' && filter_var($sEmail, FILTER_VALIDATE_EMAIL);
+                
+                if ($tipo_envio === 'primario' && $pValid) {
+                    $destinatarios[] = ['email' => $pEmail, 'name' => $nombre];
+                } else if ($tipo_envio === 'secundario' && $sValid) {
+                    $destinatarios[] = ['email' => $sEmail, 'name' => $nombre];
+                } else if ($tipo_envio === 'ambos') {
+                    if ($pValid) $destinatarios[] = ['email' => $pEmail, 'name' => $nombre];
+                    if ($sValid && $sEmail !== $pEmail) $destinatarios[] = ['email' => $sEmail, 'name' => $nombre];
+                }
+            }
+            
+            if (empty($destinatarios)) {
+                return ['status' => false, 'message' => "No hay destinatarios válidos para el tipo de envío seleccionado."];
+            }
+
+            $email = new SendGridMail(); 
+            $email->setFrom("recibos@marvifet.com.mx", "Marvifet");
+            $email->setSubject($subject);
+            
+            foreach ($destinatarios as $dest) {
+                $email->addTo($dest['email'], $dest['name']);
+            }
+            
+            // Format message allowing HTML line breaks
+            $msjHtml = nl2br(htmlspecialchars($messageText));
+            $email->addContent("text/html", $msjHtml);
+
+            if (!empty($pdfContent)) {
+                $attachment = base64_encode($pdfContent);
+                $email->addAttachment($attachment, "application/pdf", $filename, "attachment");
+            }
+
+            $apiKey = getenv('SENDGRID_API_KEY');
+            if (empty($apiKey)) {
+                return ['status' => false, 'message' => "Configuración faltante: SENDGRID_API_KEY no definida."];
+            }
+
+            $sendgrid = new SendGrid($apiKey);
+            $response = $sendgrid->send($email);
+
+            $sc = $response->statusCode();
+            if ($sc >= 200 && $sc < 300) {
+                return ['status' => true, 'message' => "Email enviado con éxito"];
+            } else {
+                $body = json_decode($response->body(), true);
+                $errorMsg = $body['errors'][0]['message'] ?? "Error desconocido";
+                return ['status' => false, 'message' => "SendGrid rechazó el envío: $errorMsg"];
+            }
+
+        } catch (\Exception $e) {
+            log_message('error', 'Excepción Crítica SendGrid Personalizado: ' . $e->getMessage());
             return ['status' => false, 'message' => "Fallo técnico en el motor de envío: " . $e->getMessage()];
         }
     }
@@ -625,10 +953,9 @@ class Historial extends BaseController
             $mov = $this->movModel->find($id_movimiento);
             if (!$mov) return $this->failNotFound('Movimiento no encontrado');
 
-            // Seguridad: Solo permitir borrar pagos o ajustes. 
-            // Los cargos (consumo) están ligados a la lectura y no deben borrarse solos.
-            if ($mov['tipo'] === 'cargo') {
-                return $this->fail('No se permite eliminar cargos de consumo directamente. Elimine o edite la lectura asociada.');
+            // Seguridad: No permitir borrar movimientos automáticos ligados a una lectura, excepto pagos manuales.
+            if ($mov['tipo'] !== 'pago' && $mov['referencia_tipo'] === 'lectura') {
+                return $this->fail('No se permite eliminar movimientos generados por una lectura. Elimine o edite la lectura asociada.');
             }
 
             if ($this->movModel->delete($id_movimiento)) {
@@ -654,6 +981,7 @@ class Historial extends BaseController
         $historia = $this->lecturaModel->getHistorialReciente($id_departamento, 12);
         return $this->respond($historia);
     }
+
 
     /**
      * Cargar solo el muro de notas global
@@ -757,25 +1085,182 @@ class Historial extends BaseController
         }
     }
 
+
     /**
-     * Búsqueda Omnidireccional (Restringida a Periodo Actual)
+     * Endpoint para OmniSearch
+     * Recibe query "q" y "filters" (separados por coma).
+     * Dependiendo de los filtros elegidos, llama a los modelos correspondientes.
+     * GET api/historial/omnisearch?q=cadena&filters=edificio,cliente
      */
-    public function buscar()
+    public function omnisearch()
     {
-        $query = $this->request->getGet('q');
-        if (!$query) return $this->respond([]);
+        try {
+            $query = $this->request->getGet('q');
+            $filtersParam = $this->request->getGet('filters');
 
-        // Obtener Periodo Activo usando el modelo centralizado
-        $periodoRow = $this->corteModel->getActiveFullRow();
-        
-        $periodo = $periodoRow['periodo'] ?? date('F Y');
-        $fechas = [
-            'inicio' => $periodoRow['fecha_inicio'] ?? date('Y-m-01'), 
-            'fin' => $periodoRow['fecha_fin'] ?? date('Y-m-t')
-        ];
+            if (empty($query) || strlen(trim($query)) < 3) {
+                return $this->fail('La cadena de búsqueda debe tener al menos 3 caracteres.');
+            }
 
-        $results = $this->lecturaModel->searchOmni($query, $periodo, $fechas);
+            $filters = $filtersParam ? explode(',', $filtersParam) : [];
+            $activeRow = $this->corteModel->getActiveFullRow();
+            $periodo = $activeRow['periodo'] ?? '---';
+            $prevRow = $this->corteModel->getPeriodoAnterior($activeRow['fecha_inicio'] ?? null);
+            $periodoAnterior = $prevRow['periodo'] ?? null;
 
-        return $this->respond($results);
+            $ids_departamentos = [];
+
+            // Recorrer las opciones enviadas y llamar al método correspondiente del Modelo
+            foreach ($filters as $filter) {
+                switch (trim($filter)) {
+                    case 'edificio':
+                        // 1. Encontrar los edificios que coinciden
+                        $edificios = $this->edificioModel->searchEdificios($query);
+                        $ids_edificios = array_column($edificios, 'id_edificio');
+                        
+                        // 2. Extraer solo los IDs de sus departamentos
+                        if (!empty($ids_edificios)) {
+                            $deptos_ids = $this->deptModel->getIdsByEdificios($ids_edificios);
+                            $ids_departamentos = array_merge($ids_departamentos, $deptos_ids);
+                        }
+                        break;
+
+                    case 'departamento':
+                        // Encontrar departamentos que coinciden con el número
+                        $deptos_ids = $this->deptModel->searchIdsByNumDepartamento($query);
+                        if (!empty($deptos_ids)) {
+                            $ids_departamentos = array_merge($ids_departamentos, $deptos_ids);
+                        }
+                        break;
+
+                    case 'cliente':
+                        // 1. Encontrar los clientes que coinciden
+                        $clientes = $this->clienteModel->searchClientes($query);
+                        $ids_clientes = array_column($clientes, 'id_cliente');
+                        
+                        // 2. Extraer solo los IDs de sus departamentos
+                        if (!empty($ids_clientes)) {
+                            $deptos_ids = $this->deptModel->getIdsByClientes($ids_clientes);
+                            $ids_departamentos = array_merge($ids_departamentos, $deptos_ids);
+                        }
+                        break;
+
+                    case 'correo':
+                        // 1. Encontrar los clientes que coinciden
+                        $clientes = $this->clienteModel->searchCorreos($query);
+                        $ids_clientes = array_column($clientes, 'id_cliente');
+                        
+                        // 2. Extraer solo los IDs de sus departamentos
+                        if (!empty($ids_clientes)) {
+                            $deptos_ids = $this->deptModel->getIdsByClientes($ids_clientes);
+                            $ids_departamentos = array_merge($ids_departamentos, $deptos_ids);
+                        }
+                        break;
+
+                    case 'lt_ant':
+                        $lecturas = $this->lecturaModel->searchByLecturaIni($query, $periodo);
+                        $ids_lecturas = array_column($lecturas, 'id_departamento');
+                        if (!empty($ids_lecturas)) {
+                            $ids_departamentos = array_merge($ids_departamentos, $ids_lecturas);
+                        }
+                        break;
+
+                    case 'recibo_ant':
+                        if ($periodoAnterior) {
+                            $lecturas = $this->lecturaModel->searchByTotalPeriodo($query, $periodoAnterior);
+                            $ids_lecturas = array_column($lecturas, 'id_departamento');
+                            if (!empty($ids_lecturas)) {
+                                $ids_departamentos = array_merge($ids_departamentos, $ids_lecturas);
+                            }
+                        }
+                        break;
+
+                    case 'saldo_ant':
+                        if (!empty($activeRow['fecha_inicio'])) {
+                            $movs = $this->movModel->searchBySaldoAnt($query, $activeRow['fecha_inicio']);
+                            $ids_movs = array_column($movs, 'id_departamento');
+                            if (!empty($ids_movs)) {
+                                $ids_departamentos = array_merge($ids_departamentos, $ids_movs);
+                            }
+                        }
+                        break;
+
+                    case 'lt':
+                        $lecturas = $this->lecturaModel->searchByLecturaFin($query, $periodo);
+                        $ids_lecturas = array_column($lecturas, 'id_departamento');
+                        if (!empty($ids_lecturas)) {
+                            $ids_departamentos = array_merge($ids_departamentos, $ids_lecturas);
+                        }
+                        break;
+
+                    case 'total_periodo':
+                        $lecturas = $this->lecturaModel->searchByTotalPeriodo($query, $periodo);
+                        $ids_lecturas = array_column($lecturas, 'id_departamento');
+                        if (!empty($ids_lecturas)) {
+                            $ids_departamentos = array_merge($ids_departamentos, $ids_lecturas);
+                        }
+                        break;
+
+                    case 'saldo_actual':
+                        $movs = $this->movModel->searchBySaldoActual($query);
+                        $ids_movs = array_column($movs, 'id_departamento');
+                        if (!empty($ids_movs)) {
+                            $ids_departamentos = array_merge($ids_departamentos, $ids_movs);
+                        }
+                        break;
+
+                    case 'adeudos':
+                        $movs = $this->movModel->searchByAdeudos($query);
+                        $ids_movs = array_column($movs, 'id_departamento');
+                        if (!empty($ids_movs)) {
+                            $ids_departamentos = array_merge($ids_departamentos, $ids_movs);
+                        }
+                        break;
+
+                    case 'saldo_favor':
+                        $movs = $this->movModel->searchBySaldoFavor($query);
+                        $ids_movs = array_column($movs, 'id_departamento');
+                        if (!empty($ids_movs)) {
+                            $ids_departamentos = array_merge($ids_departamentos, $ids_movs);
+                        }
+                        break;
+
+                    case 'abonos':
+                        $movs = $this->movModel->searchByAbonos($query);
+                        $ids_movs = array_column($movs, 'id_departamento');
+                        if (!empty($ids_movs)) {
+                            $ids_departamentos = array_merge($ids_departamentos, $ids_movs);
+                        }
+                        break;
+                }
+            }
+
+            // Quitar duplicados de IDs (por si un depto hizo match por edificio y cliente al mismo tiempo)
+            $ids_departamentos = array_unique($ids_departamentos);
+            $results = [];
+
+            // Ejecutar la consulta maestra pesada una ÚNICA vez
+            if (!empty($ids_departamentos)) {
+                $results = $this->deptModel->getDeptosConLecturaByIds($ids_departamentos, $periodo);
+
+                // Verificar si el PDF existe físicamente para cada departamento
+                foreach ($results as &$row) {
+                    $filename = "recibo_gas_" . $row['id_departamento'] . "_" . str_replace(' ', '_', $periodo) . ".pdf";
+                    $filepath = FCPATH . 'recibos/' . $filename;
+                    clearstatcache(true, $filepath);
+                    $row['pdf_exists'] = file_exists($filepath);
+                }
+            }
+
+            return $this->respond([
+                'status'  => true,
+                'periodo' => $periodo,
+                'data'    => $results
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', '[Historial] Error omnisearch: ' . $e->getMessage());
+            return $this->fail('Error interno al realizar la búsqueda: ' . $e->getMessage());
+        }
     }
 }

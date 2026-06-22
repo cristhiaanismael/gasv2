@@ -46,6 +46,39 @@ class Lectura extends Model
     }
 
     /**
+     * Búsqueda de departamentos por Lectura Anterior (OmniSearch)
+     */
+    public function searchByLecturaIni($cadena, $periodo)
+    {
+        return $this->select('id_departamento')
+                    ->where('periodo', $periodo)
+                    ->like('lectura_ini', $cadena)
+                    ->findAll();
+    }
+
+    /**
+     * Búsqueda de departamentos por Lectura Actual (OmniSearch)
+     */
+    public function searchByLecturaFin($cadena, $periodo)
+    {
+        return $this->select('id_departamento')
+                    ->where('periodo', $periodo)
+                    ->like('lectura_fin', $cadena)
+                    ->findAll();
+    }
+
+    /**
+     * Búsqueda de departamentos por Total del Periodo (OmniSearch)
+     */
+    public function searchByTotalPeriodo($cadena, $periodo)
+    {
+        return $this->select('id_departamento')
+                    ->where('periodo', $periodo)
+                    ->like('total_a_pagar', $cadena)
+                    ->findAll();
+    }
+
+    /**
      * Obtiene las últimas N lecturas para el historial del recibo.
      */
     /**
@@ -174,60 +207,7 @@ class Lectura extends Model
             ->getResultArray();
     }
 
-    /**
-     * Búsqueda Omnidireccional (Global)
-     * Busca por nombre, correo, depto, total o lectura en todo el universo de datos.
-     */
-    public function searchOmni($query, $periodo, $fechas = [])
-    {
-        // 1. Obtener los IDs de departamentos que coinciden en el periodo actual
-        $builder = $this->db->table('departamentos d');
-        $builder->select('d.id_departamento');
-        $builder->join('clientes c', 'd.id_cliente = c.id_cliente', 'left');
-        
-        // Join con lectura solo de este periodo
-        $builder->join('lectura l', 'd.id_departamento = l.id_departamento AND l.periodo = ' . $this->db->escape($periodo), 'left');
-        
-        // Join con movimientos filtrados por fecha del periodo
-        $builder->join('movimientos m', 'd.id_departamento = m.id_departamento AND m.fecha >= "' . $fechas['inicio'] . '" AND m.fecha <= "' . $fechas['fin'] . '"', 'left');
-        
-        $builder->groupStart()
-                ->like('c.nombre', $query)
-                ->orLike('c.ape_pat', $query)
-                ->orLike('c.ape_mat', $query)
-                ->orLike('c.correo', $query)
-                ->orLike('d.num_departamento', $query)
-                ->orLike('l.total_a_pagar', $query)
-                ->orLike('l.lectura_fin', $query)
-                ->orLike('l.nota', $query) 
-                ->orLike('m.monto', $query)
-                ->orLike('m.descripcion', $query)
-                ->groupEnd();
-        
-        $deptoIdsRes = $builder->distinct()->select('d.id_departamento')->limit(15)->get()->getResultArray();
-        if (empty($deptoIdsRes)) return [];
-        
-        $deptoIds = array_column($deptoIdsRes, 'id_departamento');
 
-        // 2. Para esos departamentos, traer la información del periodo actual
-        $finalBuilder = $this->db->table('departamentos d');
-        $finalBuilder->select('
-            d.id_departamento, d.num_departamento, d.id_edificio,
-            c.nombre, c.ape_pat, c.ape_mat, c.correo,
-            e.num_edificio as nombre_edificio,
-            l.id_lectura, l.lectura_fin, l.total_a_pagar, l.periodo, l.nota, l.foto,
-            (SELECT SUM(monto) FROM movimientos WHERE id_departamento = d.id_departamento AND tipo = "abono" AND fecha >= "' . $fechas['inicio'] . '" AND fecha <= "' . $fechas['fin'] . '") as total_abonos
-        ');
-        $finalBuilder->join('clientes c', 'd.id_cliente = c.id_cliente', 'left');
-        $finalBuilder->join('edificios e', 'd.id_edificio = e.id_edificio', 'left');
-        
-        // Join con lectura ESTRICTAMENTE de este periodo
-        $finalBuilder->join('lectura l', 'l.id_departamento = d.id_departamento AND l.periodo = ' . $this->db->escape($periodo), 'left');
-        
-        $finalBuilder->whereIn('d.id_departamento', $deptoIds);
-        
-        return $finalBuilder->get()->getResultArray();
-    }
     /**
      * Registra una lectura y su movimiento financiero asociado (Cargo).
      * Sigue estrictamente el patrón MVC moviendo la lógica del controlador al modelo.
@@ -256,11 +236,16 @@ class Lectura extends Model
             throw new \Exception("No hay precio de gas registrado para el edificio {$depto['num_edificio']}.");
         }
 
+        $forzar_calculo = isset($data['forzar_calculo']) ? (int)$data['forzar_calculo'] : 0;
+
         // 2. Cálculos
-        $consumo_m3     = round($lectura_fin - $lectura_ini, 2);
-        $consumo_litros = round($consumo_m3 * $config['factor'], 2);
-        $monto          = round($consumo_litros * $config['precioLitro'], 2);
-        $total_cargo    = round($monto + $config['cuotaAdmin'], 2);
+        $consumo_m3     = $lectura_fin - $lectura_ini;
+        $consumo_litros = round($consumo_m3 * $config['factor'], 3);
+        $monto          = round($consumo_litros * $config['precioLitro'], 3);
+        
+        // Si el consumo es cero y no se forzó el cálculo, no se cobra la cuota de administración
+        $active_cuota_admin = ($consumo_m3 == 0 && !$forzar_calculo) ? 0.00 : round((float)$config['cuotaAdmin'], 3);
+        $total_cargo    = round($monto + $active_cuota_admin, 2);
 
         // 3. Persistencia (Transacción)
         $this->db->transStart();
@@ -276,15 +261,22 @@ class Lectura extends Model
                 'lectura_fin'     => $lectura_fin,
                 'consumo_m3'      => $consumo_m3,
                 'consumos_litros' => $consumo_litros,
-                'consumos_mes'    => $consumo_m3,
                 'monto'           => $monto,
-                'cuota_admin'     => $config['cuotaAdmin'],
+                'cuota_admin'     => $active_cuota_admin,
                 'total_a_pagar'   => $total_cargo,
                 'foto'            => $foto ?: $existing['foto'] // Mantener anterior si no hay nueva
             ]);
 
-            // Sincronizar el cargo en movimientos
-            $movModel->syncReadingCharge($id_lectura, $total_cargo);
+            // Re-sincronizar movimientos completos (borra anteriores y reinserta con valores actualizados)
+            $movModel->syncReadingMovements(
+                $id_lectura,
+                $id_depto,
+                $monto,
+                $active_cuota_admin,
+                (float)($existing['cargos_add'] ?? 0), // Preservar cargos adicionales existentes
+                0,
+                $periodo
+            );
         } else {
             $id_lectura = $this->insert([
                 'id_departamento' => $id_depto,
@@ -293,9 +285,8 @@ class Lectura extends Model
                 'lectura_fin'     => $lectura_fin,
                 'consumo_m3'      => $consumo_m3,
                 'consumos_litros' => $consumo_litros,
-                'consumos_mes'    => $consumo_m3,
                 'monto'           => $monto,
-                'cuota_admin'     => $config['cuotaAdmin'],
+                'cuota_admin'     => $active_cuota_admin,
                 'cargos_add'      => 0,
                 'total_a_pagar'   => $total_cargo,
                 'fecha_register'  => $fecha_registro,
@@ -307,7 +298,7 @@ class Lectura extends Model
                 $id_lectura, 
                 $id_depto, 
                 $monto, 
-                $config['cuotaAdmin'], 
+                $active_cuota_admin, 
                 0, // cargos_add inicial es 0
                 0, // ajuste inicial es 0
                 $periodo
@@ -330,6 +321,102 @@ class Lectura extends Model
             'num_departamento' => $depto['num_departamento']
         ];
     }
+    /**
+     * Actualiza una lectura existente desde el Historial con recálculo completo.
+     * Encapsula la transacción y la lógica de cuota cero (BUG1 + BUG5).
+     * El controlador NO gestiona la transacción ni el cálculo: solo pasa datos.
+     *
+     * @param int         $id_lectura  PK de la lectura a actualizar
+     * @param array       $lectura     Fila actual de la lectura (obtenida por el controlador)
+     * @param array       $payload     Nuevos valores: lectura_fin, cargos_add, ajuste, nota, foto
+     * @param array       $config      Configuración del edificio: precioLitro, factor, cuotaAdmin
+     * @param Movimientos $movModel    Modelo de movimientos (inyectado desde el controlador)
+     * @return array ['total_a_pagar', 'lectura']
+     */
+    public function actualizarLectura($id_lectura, $lectura, $payload, $config, $movModel)
+    {
+        $lec_fin    = ($payload['lectura_fin'] !== null) ? (float)$payload['lectura_fin'] : (float)$lectura['lectura_fin'];
+        $cargos_add = (float)($payload['cargos_add'] ?? 0);
+        $ajuste     = (float)($payload['ajuste'] ?? 0);
+        $foto       = $payload['foto'] ?? $lectura['foto'];
+        $nota       = $payload['nota'] ?? null;
+
+        // Recálculo completo (lógica idéntica a registrarLectura para garantizar consistencia)
+        $lec_ini  = (float)$lectura['lectura_ini'];
+        $m3       = max(0, $lec_fin - $lec_ini);
+        $lt       = round($m3 * (float)$config['factor'], 3);
+        $montoGas = round($lt * (float)$config['precioLitro'], 3);
+
+        // BUG1 FIX: Aplicar la misma regla que registrarLectura — si consumo=0, cuota=0
+        $active_cuota_admin = ($m3 == 0) ? 0.00 : round((float)$config['cuotaAdmin'], 3);
+
+        $total_calculado = round($montoGas + $active_cuota_admin + $cargos_add + $ajuste, 2);
+
+        if (array_key_exists('total_a_pagar', $payload) && $payload['total_a_pagar'] !== null) {
+            $total_a_pagar = (float)$payload['total_a_pagar'];
+            
+            // Si el frontend forzó a 0 (por regla de lecturas iguales) pero el cálculo era mayor
+            if ($total_a_pagar == 0 && $total_calculado > 0 && $m3 == 0) {
+                $active_cuota_admin = 0;
+                $cargos_add = 0;
+                $ajuste = 0;
+            }
+        } else {
+            // Recálculo natural forzado (ej. botón recalcular)
+            $total_a_pagar = $total_calculado;
+        }
+
+        $data = [
+            'lectura_fin'     => $lec_fin,
+            'consumo_m3'      => $m3,
+            'consumos_litros' => $lt,
+            'monto'           => $montoGas,
+            'cuota_admin'     => $active_cuota_admin,
+            'cargos_add'      => $cargos_add,
+            'total_a_pagar'   => $total_a_pagar,
+            'foto'            => $foto
+        ];
+
+        // Notas siempre en JSON para ser consistente con addNota()
+        if ($nota !== null && trim($nota) !== '') {
+            $notasExistentes = json_decode($lectura['nota'] ?? '[]', true);
+            if (!is_array($notasExistentes)) $notasExistentes = [];
+            $notasExistentes[] = [
+                'text' => trim($nota),
+                'date' => date('Y-m-d H:i:s'),
+                'user' => 'Admin'
+            ];
+            $data['nota'] = json_encode($notasExistentes);
+        }
+
+        // BUG5 FIX: La transacción se gestiona aquí en el Modelo, no en el Controlador
+        $this->db->transStart();
+
+        $this->update($id_lectura, $data);
+
+        // El ajuste va a movimientos (NO existe columna ajuste en lectura)
+        $movModel->syncReadingMovements(
+            $id_lectura,
+            $lectura['id_departamento'],
+            $montoGas,
+            $active_cuota_admin,
+            $cargos_add,
+            $ajuste,
+            $lectura['periodo'] ?? 'Actual'
+        );
+
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === false) {
+            throw new \Exception('Error al actualizar la lectura en base de datos');
+        }
+
+        return [
+            'total_a_pagar' => $total_a_pagar,
+            'lectura'       => $this->find($id_lectura)
+        ];
+    }
+
     /**
      * Obtiene la última lectura registrada para un departamento.
      */

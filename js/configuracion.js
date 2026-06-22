@@ -1,84 +1,21 @@
 /**
  * configuracion.js
- * Lógica para la gestión de periodos y carga masiva de departamentos.
+ * Orquestador principal que enlaza los eventos de la UI y coordina las llamadas AJAX y las actualizaciones visuales.
  */
 
 $(document).ready(function () {
-    const API_BASE = "apis_marvi/public/api/";
+    console.log("[Configuracion] Inicializando módulo...");
 
-    // 1. Manejo de Pestañas
-    $('.tab-link').on('click', function () {
-        const tab = $(this).data('tab');
-        $('.tab-link').removeClass('text-blue-600 bg-blue-50').addClass('text-slate-600');
-        $(this).removeClass('text-slate-600').addClass('text-blue-600 bg-blue-50');
-        $('.tab-section').addClass('hidden');
-        $(`#section-${tab}`).removeClass('hidden');
-        if(tab === 'departamentos') loadEdificiosForSelect();
-    });
+    // Inicializar las Clases
+    const api = new ConfigAPI();
+    const dom = new ConfigDOM();
 
-    // 2. Lógica de Periodos
-    const $fechaInicio = $('#p-fecha-inicio');
-    const $fechaFin = $('#p-fecha-fin');
-    const $preview = $('#periodo-preview');
+    let selectedEdificioId = null;
 
-    function updatePeriodoPreview() {
-        const start = $fechaInicio.val();
-        const end = $fechaFin.val();
-        if (start && end) {
-            const fmtStart = start.split('-').reverse().join('-');
-            const fmtEnd = end.split('-').reverse().join('-');
-            const finalString = `${fmtStart} ${fmtEnd}`.trim();
-            $preview.text(finalString).addClass('text-blue-900').removeClass('text-slate-400');
-            return finalString;
-        } else {
-            $preview.text('-- - --').addClass('text-slate-400');
-            return null;
-        }
-    }
-
-    $fechaInicio.on('change', updatePeriodoPreview);
-    $fechaFin.on('change', updatePeriodoPreview);
-
-    $('#btn-save-periodo').on('click', function () {
-        const nombre = updatePeriodoPreview();
-        if (!nombre) {
-            showToast("Selecciona fechas", "error");
-            return;
-        }
-        const data = { nombre_periodo: nombre, fecha_inicio: $fechaInicio.val(), fecha_fin: $fechaFin.val() };
-        $(this).prop('disabled', true).html('<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Guardando...</span>');
-        lucide.createIcons();
-
-        $.ajax({
-            url: API_BASE + 'config/periodo',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            success: (res) => {
-                showToast("Corte registrado", "success");
-                $fechaInicio.val(''); $fechaFin.val('');
-                updatePeriodoPreview();
-                fetchPeriodos();
-            },
-            error: (jqXHR) => {
-                const msg = jqXHR.responseJSON?.messages?.error || "Error al guardar corte";
-                showToast(msg, "error");
-            },
-            complete: () => {
-                $(this).prop('disabled', false).html('<i data-lucide="save" class="w-4 h-4"></i><span>Registrar Periodo Oficial</span>');
-                lucide.createIcons();
-            }
-        });
-    });
-
-    /**
-     * SUGERENCIA BASADA EN EL AÑO ANTERIOR
-     * Toma el último periodo, detecta cuál sigue, y busca ese mismo mes el año pasado.
-     */
+    // --- 1. ENTRADA/SUGERENCIA DE PERIODOS ---
     function suggestNextPeriod(allPeriods) {
         if (!allPeriods || allPeriods.length === 0) return;
 
-        // 1. Encontrar el último periodo registrado (el de id más alto o fecha más reciente)
         const latest = allPeriods[0];
         if (!latest.fecha_inicio) return;
 
@@ -86,37 +23,29 @@ $(document).ready(function () {
             const lastStartParts = latest.fecha_inicio.split('-');
             const lastStart = new Date(lastStartParts[0], lastStartParts[1] - 1, lastStartParts[2]);
             
-            // 2. Determinar el mes y año que sigue
             const nextTargetMonth = (lastStart.getMonth() + 1) % 12;
             const nextTargetYear = lastStart.getFullYear() + (lastStart.getMonth() === 11 ? 1 : 0);
 
-            // 3. Buscar en el historial el mismo mes pero del año pasado (o cualquier año previo)
-            // Queremos un periodo que haya empezado en nextTargetMonth
             const historicalMatch = allPeriods.find(p => {
                 if (!p.fecha_inicio) return false;
                 const pParts = p.fecha_inicio.split('-');
-                return parseInt(pParts[1]) === (nextTargetMonth + 1); // Meses en JS son 0-11, en DB son 1-12
+                return parseInt(pParts[1]) === (nextTargetMonth + 1);
             });
 
             if (historicalMatch) {
-                // 4. Clonar los días pero usar el año proyectado
                 const hStartParts = historicalMatch.fecha_inicio.split('-');
                 const hEndParts = historicalMatch.fecha_fin.split('-');
-
                 const pad = (n) => n.toString().padStart(2, '0');
-                
-                // Calculamos si el periodo termina en el mismo año o en el siguiente
                 const yearDiff = parseInt(hEndParts[0]) - parseInt(hStartParts[0]);
                 
                 const suggestedStart = `${nextTargetYear}-${pad(hStartParts[1])}-${pad(hStartParts[2])}`;
                 const suggestedEnd = `${nextTargetYear + yearDiff}-${pad(hEndParts[1])}-${pad(hEndParts[2])}`;
 
-                $fechaInicio.val(suggestedStart);
-                $fechaFin.val(suggestedEnd);
-                updatePeriodoPreview();
+                dom.$fechaInicio.val(suggestedStart);
+                dom.$fechaFin.val(suggestedEnd);
+                dom.updatePeriodoPreview();
                 showToast("Sugerencia basada en ciclo anterior", "info");
             } else {
-                // Fallback: Sugerencia mensual simple si no hay historial para ese mes
                 const nextStart = new Date(lastStart);
                 nextStart.setMonth(lastStart.getMonth() + 1);
                 const nextEnd = new Date(nextStart);
@@ -124,9 +53,9 @@ $(document).ready(function () {
                 nextEnd.setDate(nextEnd.getDate() - 1);
 
                 const pad = (n) => n.toString().padStart(2, '0');
-                $fechaInicio.val(`${nextStart.getFullYear()}-${pad(nextStart.getMonth()+1)}-${pad(nextStart.getDate())}`);
-                $fechaFin.val(`${nextEnd.getFullYear()}-${pad(nextEnd.getMonth()+1)}-${pad(nextEnd.getDate())}`);
-                updatePeriodoPreview();
+                dom.$fechaInicio.val(`${nextStart.getFullYear()}-${pad(nextStart.getMonth()+1)}-${pad(nextStart.getDate())}`);
+                dom.$fechaFin.val(`${nextEnd.getFullYear()}-${pad(nextEnd.getMonth()+1)}-${pad(nextEnd.getDate())}`);
+                dom.updatePeriodoPreview();
             }
         } catch (e) {
             console.error("Error en sugerencia:", e);
@@ -134,58 +63,392 @@ $(document).ready(function () {
     }
 
     function fetchPeriodos() {
-        $.get(API_BASE + 'config/periodos', (res) => {
-            if (!Array.isArray(res)) return;
+        console.log("[Configuracion] Cargando periodos...");
+        api.getPeriodos()
+            .done((res) => {
+                console.log("[Configuracion] Periodos devueltos:", res);
+                let data = res;
+                if (typeof res === 'string') {
+                    try { data = JSON.parse(res); } catch(e) { console.error("Error parsing periodos:", e); }
+                }
+                if (!Array.isArray(data)) return;
 
-            // 1. Selector Global
-            const options = res.map(p => `<option value="${p.id_corte}">${p.periodo}</option>`).join('');
-            $('#periodo-global-select').html('<option value="">-- Ver todos los periodos --</option>' + options);
+                dom.renderPeriodosSelect(data);
+                dom.renderPeriodosList(data);
 
-            // 2. Lista
-            const html = res.map(p => `
-                <div class="bg-white p-4 rounded-2xl flex justify-between items-center border border-slate-100 hover:border-blue-200 transition-all shadow-sm">
-                    <div>
-                        <p class="text-sm font-black text-slate-800">${p.periodo}</p>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase">Rango: ${p.fecha_inicio || '--'} a ${p.fecha_fin || '--'}</p>
-                    </div>
-                </div>
-            `).join('');
-            $('#periodos-list').html(html || '<p class="text-center py-10 text-slate-400 text-xs font-bold italic">No hay registros</p>');
+                if (!dom.$fechaInicio.val()) {
+                    suggestNextPeriod(data);
+                }
+            })
+            .fail((err) => {
+                console.error("[Configuracion] Falló carga de periodos:", err);
+                showToast("Error al cargar periodos", "error");
+            });
+    }
 
-            // 3. Sugerencia proactiva
-            if (!$fechaInicio.val()) {
-                suggestNextPeriod(res);
+    // Bind Eventos de Periodo
+    dom.$fechaInicio.on('change', () => dom.updatePeriodoPreview());
+    dom.$fechaFin.on('change', () => dom.updatePeriodoPreview());
+
+    dom.$btnSavePeriodo.on('click', function () {
+        const nombre = dom.updatePeriodoPreview();
+        if (!nombre) {
+            showToast("Selecciona fechas", "error");
+            return;
+        }
+
+        const data = { 
+            nombre_periodo: nombre, 
+            fecha_inicio: dom.$fechaInicio.val(), 
+            fecha_fin: dom.$fechaFin.val() 
+        };
+
+        dom.setLoadingState('#btn-save-periodo', true);
+
+        api.savePeriodo(data)
+            .done((res) => {
+                showToast("Corte registrado correctamente", "success");
+                dom.clearPeriodoForm();
+                fetchPeriodos();
+            })
+            .fail((jqXHR) => {
+                const msg = jqXHR.responseJSON?.messages?.error || "Error al guardar corte";
+                showToast(msg, "error");
+            })
+            .always(() => {
+                const defaultHtml = '<i data-lucide="save" class="w-4 h-4"></i><span>Registrar Periodo Oficial</span>';
+                dom.setLoadingState('#btn-save-periodo', false, defaultHtml);
+            });
+    });
+
+    // --- 2. MANEJO DE PESTAÑAS PRINCIPALES ---
+    $('.tab-link').on('click', function () {
+        const tab = $(this).data('tab');
+        console.log("[Configuracion] Tab clickeado:", tab);
+        
+        $('.tab-link').removeClass('text-blue-600 bg-blue-50').addClass('text-slate-600');
+        $(this).removeClass('text-slate-600').addClass('text-blue-600 bg-blue-50');
+        
+        $('.tab-section').addClass('hidden');
+        $(`#section-${tab}`).removeClass('hidden');
+        
+        if (tab === 'edificios') {
+            loadEdificiosForConfig();
+        }
+    });
+
+    // --- 3. GESTIÓN DE TARIFAS DE EDIFICIOS ---
+    function loadEdificiosForConfig() {
+        console.log("[Configuracion] Cargando catálogo de edificios para configuración...");
+        api.getEdificios()
+            .done((res) => {
+                console.log("[Configuracion] Edificios devueltos:", res);
+                let data = res;
+                if (typeof res === 'string') {
+                    try { data = JSON.parse(res); } catch(e) { console.error("Error parsing edificios:", e); }
+                }
+                if (!Array.isArray(data)) {
+                    console.error("[Configuracion] El formato de edificios no es un array:", data);
+                    return;
+                }
+                dom.renderEdificiosSelect(data);
+                if (selectedEdificioId) {
+                    dom.$edificioSelect.val(selectedEdificioId);
+                }
+            })
+            .fail((err) => {
+                console.error("[Configuracion] Falló carga de edificios:", err);
+                showToast("Error al cargar edificios", "error");
+            });
+    }
+
+    $(document).on('change', '#config-edificio-select', function () {
+        const id = $(this).val();
+        console.log("[Configuracion] Edificio seleccionado en evento change:", id);
+        selectedEdificioId = id;
+
+        const hasSelection = !!id;
+        dom.toggleConfigView(hasSelection);
+
+        if (hasSelection) {
+            fetchEdificioConfig(id);
+        }
+    });
+
+    function fetchEdificioConfig(id) {
+        console.log("[Configuracion] Cargando configuraciones del edificio:", id);
+        
+        // Cargar Configuración Vigente
+        api.getEdificioConfig(id)
+            .done((res) => {
+                console.log("[Configuracion] Config vigente devuelta:", res);
+                let data = res;
+                if (typeof res === 'string') {
+                    try { data = JSON.parse(res); } catch(e) { console.error("Error parsing config:", e); }
+                }
+                dom.renderVigenteConfig(data);
+            })
+            .fail((err) => {
+                console.error("[Configuracion] Falló obtener config vigente:", err);
+                showToast("Error al obtener la configuración vigente", "error");
+            });
+
+        // Cargar Historial
+        api.getEdificioHistory(id)
+            .done((res) => {
+                console.log("[Configuracion] Historial devuelto:", res);
+                let data = res;
+                if (typeof res === 'string') {
+                    try { data = JSON.parse(res); } catch(e) { console.error("Error parsing history:", e); }
+                }
+                dom.renderHistoryLists(data);
+            })
+            .fail((err) => {
+                console.error("[Configuracion] Falló obtener historial:", err);
+                showToast("Error al obtener historial", "error");
+            });
+    }
+
+    // Cambiar de pestaña en el Historial
+    $('.history-tab-link').on('click', function () {
+        const tab = $(this).data('history-tab');
+        console.log("[Configuracion] Historial tab clickeado:", tab);
+        
+        $('.history-tab-link')
+            .removeClass('bg-white text-slate-800 shadow-sm border border-slate-200')
+            .addClass('text-slate-500 hover:text-slate-800');
+        $(this)
+            .removeClass('text-slate-500 hover:text-slate-800')
+            .addClass('bg-white text-slate-800 shadow-sm border border-slate-200');
+
+        $('.history-pane').addClass('hidden');
+        $(`#history-list-${tab}`).removeClass('hidden');
+    });
+
+    // Guardar Configuración Comercial
+    dom.$btnSaveConfig.on('click', function () {
+        if (!selectedEdificioId) {
+            showToast("Selecciona un edificio primero", "error");
+            return;
+        }
+
+        const precioLitro = parseFloat(dom.$inputPrecioLitro.val());
+        const factor      = parseFloat(dom.$inputFactor.val());
+        const cuotaAdmin  = parseFloat(dom.$inputCuotaAdmin.val());
+
+        console.log("[Configuracion] Intentando guardar tarifas:", { precioLitro, factor, cuotaAdmin });
+
+        if (isNaN(precioLitro) || isNaN(factor) || isNaN(cuotaAdmin)) {
+            showToast("Por favor, rellene todos los campos con valores numéricos", "warning");
+            return;
+        }
+
+        if (precioLitro < 0 || factor <= 0 || cuotaAdmin < 0) {
+            showToast("Los valores deben ser válidos y mayores a cero", "warning");
+            return;
+        }
+
+        dom.setLoadingState('#btn-save-config', true);
+
+        api.saveEdificioConfig(selectedEdificioId, { precioLitro, factor, cuotaAdmin })
+            .done((res) => {
+                showToast(res.message, "success");
+                fetchEdificioConfig(selectedEdificioId);
+            })
+            .fail((jqXHR) => {
+                const msg = jqXHR.responseJSON?.messages?.error || "Error al actualizar configuración";
+                showToast(msg, "error");
+            })
+            .always(() => {
+                const defaultHtml = '<i data-lucide="save" class="w-4 h-4"></i><span>Guardar Configuración</span>';
+                dom.setLoadingState('#btn-save-config', false, defaultHtml);
+            });
+    });
+
+    // --- 4. CONFIGURACIÓN COBRANZA ---
+    let cobranzaConfigTipo = 'global';
+    let cobranzaConfigEntidadId = null;
+
+    $('input[name="cobranza-nivel"]').on('change', function() {
+        const val = $(this).val();
+        cobranzaConfigTipo = val;
+        cobranzaConfigEntidadId = null;
+
+        if (val === 'global') {
+            $('#cobranza-dynamic-selectors').addClass('hidden');
+            $('#cobranza-sel-edificio-container').addClass('hidden');
+            $('#cobranza-sel-depto-container').addClass('hidden');
+            fetchCobranzaTemplate();
+        } else if (val === 'edificio') {
+            $('#cobranza-dynamic-selectors').removeClass('hidden');
+            $('#cobranza-sel-edificio-container').removeClass('hidden');
+            $('#cobranza-sel-depto-container').addClass('hidden');
+            loadCobranzaEdificios();
+        } else if (val === 'departamento') {
+            $('#cobranza-dynamic-selectors').removeClass('hidden');
+            $('#cobranza-sel-edificio-container').removeClass('hidden');
+            $('#cobranza-sel-depto-container').removeClass('hidden');
+            loadCobranzaEdificios();
+        }
+    });
+
+    function loadCobranzaEdificios() {
+        $.get(api.API_BASE + 'configuracion-cobranza/get-options', { tipo: 'edificios' })
+        .done(res => {
+            if(res.status) {
+                const options = ['<option value="">Seleccione Edificio</option>'].concat(res.data.map(e => `<option value="${e.id_edificio}">Edificio ${e.num_edificio}</option>`));
+                $('#cobranza-edificio-select').html(options.join(''));
+                $('#cobranza-depto-select').html('<option value="">Seleccione un edificio primero</option>');
+                $('#cobranza-asunto').val('');
+                $('#cobranza-mensaje').val('');
             }
         });
     }
 
-    function loadEdificiosForSelect() {
-        $.get(API_BASE + 'edificios', (res) => {
-            const html = res.map(e => `<option value="${e.id_edificio}">${e.num_edificio}</option>`).join('');
-            $('#bulk-edificio-select').html(html);
+    $('#cobranza-edificio-select').on('change', function() {
+        const val = $(this).val();
+        if (!val) {
+            $('#cobranza-depto-select').html('<option value="">Seleccione un edificio primero</option>');
+            $('#cobranza-asunto').val('');
+            $('#cobranza-mensaje').val('');
+            cobranzaConfigEntidadId = null;
+            return;
+        }
+
+        if (cobranzaConfigTipo === 'edificio') {
+            cobranzaConfigEntidadId = val;
+            fetchCobranzaTemplate();
+        } else if (cobranzaConfigTipo === 'departamento') {
+            $.get(api.API_BASE + 'configuracion-cobranza/get-options', { tipo: 'departamentos', parent_id: val })
+            .done(res => {
+                if(res.status) {
+                    const options = ['<option value="">Seleccione Departamento</option>'].concat(res.data.map(d => `<option value="${d.id_departamento}">Depto ${d.numero}</option>`));
+                    $('#cobranza-depto-select').html(options.join(''));
+                    $('#cobranza-asunto').val('');
+                    $('#cobranza-mensaje').val('');
+                }
+            });
+        }
+    });
+
+    $('#cobranza-depto-select').on('change', function() {
+        const val = $(this).val();
+        if (!val) {
+            $('#cobranza-asunto').val('');
+            $('#cobranza-mensaje').val('');
+            cobranzaConfigEntidadId = null;
+            return;
+        }
+        cobranzaConfigEntidadId = val;
+        fetchCobranzaTemplate();
+    });
+
+    function fetchCobranzaTemplate() {
+        const tipo = cobranzaConfigTipo;
+        const entidad_id = cobranzaConfigEntidadId;
+
+        if (tipo !== 'global' && !entidad_id) return;
+
+        $('#btn-save-cobranza').prop('disabled', true).html('<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>Cargando...</span>');
+        lucide.createIcons();
+
+        $.get(api.API_BASE + 'configuracion-cobranza/get-template', { tipo_entidad: tipo, entidad_id: entidad_id })
+        .done(res => {
+            if (res.status && res.data) {
+                $('#cobranza-asunto').val(res.data.asunto);
+                $('#cobranza-mensaje').val(res.data.mensaje);
+            } else {
+                $('#cobranza-asunto').val('');
+                $('#cobranza-mensaje').val('');
+                showToast("No hay plantilla configurada para este nivel. Puede crear una.", "info");
+            }
+        })
+        .always(() => {
+            $('#btn-save-cobranza').prop('disabled', false).html('<i data-lucide="save" class="w-5 h-5"></i><span>Guardar Plantilla</span>');
+            lucide.createIcons();
         });
     }
 
-    $('#btn-save-bulk').on('click', function () {
-        const id_edi = $('#bulk-edificio-select').val();
-        const text = $('#bulk-depto-list').val();
-        const deptos = text.split('\n').map(d => d.trim()).filter(d => d.length > 0);
-        if (!id_edi || deptos.length === 0) {
-            showToast("Completa los datos", "warning"); return;
+    $('#btn-save-cobranza').on('click', function() {
+        const asunto = $('#cobranza-asunto').val().trim();
+        const mensaje = $('#cobranza-mensaje').val().trim();
+
+        if (!asunto || !mensaje) {
+            showToast("Asunto y Mensaje son requeridos", "error");
+            return;
         }
-        $(this).prop('disabled', true).text('Procesando...');
-        $.ajax({
-            url: API_BASE + 'config/departamentos/bulk',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ id_edificio: id_edi, departamentos: deptos }),
-            success: (res) => { showToast(res.message, "success"); $('#bulk-depto-list').val(''); },
-            error: () => showToast("Error", "error"),
-            complete: () => $(this).prop('disabled', false).text('Procesar y Dar de Alta')
+
+        if (cobranzaConfigTipo !== 'global' && !cobranzaConfigEntidadId) {
+            showToast("Seleccione un edificio o departamento", "error");
+            return;
+        }
+
+        $('#btn-save-cobranza').prop('disabled', true).html('<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>Guardando...</span>');
+        lucide.createIcons();
+
+        $.post(api.API_BASE + 'configuracion-cobranza/save-template', {
+            tipo_entidad: cobranzaConfigTipo,
+            entidad_id: cobranzaConfigEntidadId,
+            asunto: asunto,
+            mensaje: mensaje
+        })
+        .done(res => {
+            if (res.status) showToast(res.message, "success");
+            else showToast(res.message, "error");
+        })
+        .always(() => {
+            $('#btn-save-cobranza').prop('disabled', false).html('<i data-lucide="save" class="w-5 h-5"></i><span>Guardar Plantilla</span>');
+            lucide.createIcons();
         });
     });
 
+    // Etiquetas (Click para copiar)
+    $('.cobranza-tag').on('click', function() {
+        const text = $(this).text();
+        navigator.clipboard.writeText(text).then(() => {
+            showToast(`Etiqueta ${text} copiada al portapapeles. ¡Pégala en el Asunto o Mensaje!`, "success");
+        }).catch(() => {
+            showToast("No se pudo copiar al portapapeles", "error");
+        });
+    });
+
+    // Cargar la global por defecto
+    fetchCobranzaTemplate();
+
+    // --- 5. INTEGRACIÓN CON EL SELECTOR GLOBAL (QUICK SELECTOR) ---
+    document.addEventListener('building-selected', function (e) {
+        const id = e.detail.id;
+        console.log("[Configuracion] Selector global seleccionó edificio ID:", id);
+        
+        // Activar la pestaña de Tarifas y Cuotas
+        const $tabLink = $('button[data-tab="edificios"]');
+        if ($tabLink.length) {
+            $tabLink.click();
+        }
+
+        // Seleccionar en el dropdown
+        if (id) {
+            selectedEdificioId = id;
+            // Si el select ya tiene opciones cargadas, lo asignamos y disparamos el cambio
+            if (dom.$edificioSelect.find(`option[value="${id}"]`).length) {
+                dom.$edificioSelect.val(id).trigger('change');
+            } else {
+                // Si aún no está cargado (caso muy raro), precargamos y luego seleccionamos
+                loadEdificiosForConfig();
+                // Usamos un pequeño delay para esperar a que termine el done render
+                setTimeout(() => {
+                    dom.$edificioSelect.val(id).trigger('change');
+                }, 400);
+            }
+        }
+    });
+
+    // Cargar periodos al inicio
     fetchPeriodos();
+    
+    // PRE-CARGAR edificios al iniciar para que ya estén disponibles sin esperar a clickear la pestaña
+    loadEdificiosForConfig();
+
     lucide.createIcons();
 });
 

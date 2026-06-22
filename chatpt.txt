@@ -1,0 +1,107 @@
+m3          = lectura_actual - lectura_anterior
+litros      = m3 × factor
+montoGas    = litros × precioLitro
+activeCuota = (m3 === 0 && !forzarCalculo) ? 0 : cuotaAdmin
+total       = montoGas + activeCuota + saldoAnterior
+
+
+entonces como funciona esto?
+
+Distinción clave: El frontend incluye saldoAnterior en el Total a Pagar visual.
+ Sin embargo, el backend NO incluye saldoAnterior en total_a_pagar que guarda en la tabla. 
+Esto es una discrepancia de diseño importante (ver sección 8).
+
+
+$consumo_m3     = round($lectura_fin - $lectura_ini, 2);
+$consumo_litros = round($consumo_m3 * $config['factor'], 2);
+$monto          = round($consumo_litros * $config['precioLitro'], 2);
+$active_cuota_admin = ($consumo_m3 == 0 && !$forzar_calculo) ?
+
+
+para uq hace esto?
+Limpia todos los movimientos anteriores vinculados a ese id_lectura (borrado físico, con DELETE).
+
+ explica
+El saldo anterior no se suma al total_a_pagar en la tabla lectura. Esto es correcto 
+en arquitectura (el saldo ya está en los movimientos), pero el usuario ve un
+ total diferente en pantalla al que queda guardado, lo que puede generar confusión.
+
+
+  consumos_mes es Redundante
+La tabla lectura guarda consumo_m3 y consumos_mes con el mismo valor.
+ No hay distinción de uso en el código.
+ Genera inconsistencia potencial si alguna operación los actualiza de forma diferente.
+
+ con cual deberia quedarme?
+
+al cambiar el departamento no trae lo del departamento actual?
+ Modo Edición: lecAnterior Usa lectura_ini del Periodo Actual
+Si ya existe una lectura en el periodo y se vuelve a capturar (modo edición),
+ el frontend usa lectura_actual.lectura_ini como lecAnterior. Esto es correcto,
+  pero significa que la lectura de inicio no cambia al actualizar. 
+  Si el usuario cambia el departamento manualmente en modo edición,
+   lecAnterior puede quedar desincronizado del nuevo departamento.
+
+
+La nota se guarda como string plano en este flujo
+ ($data['nota'] = $nota), no como JSON, a diferencia de addNota() que s
+ í guarda array JSON. Esto puede corromper el sistema de notas si se mezclan los dos flujos.
+ debe ser siempre json corrige de ser necesario
+ 
+
+ esto no lo entendi bien, explica detalla y dime como es que podria hacer que el sistema 
+ tronara y como corregirlo
+  syncReadingCharge no existe
+En Lectura::registrarLectura(), al actualizar una lectura existente, se llama:
+<php
+$movModel->syncReadingCharge($id_lectura, $total_cargo);
+Este método no está definido en Movimientos.php. Esto causaría un error fatal 
+(Call to undefined method) al actualizar una lectura 
+que ya existe desde GasData Capture. Solo los registros nuevos funcionarían
+ correctamente; las actualizaciones desde Capture fallarían en la sincronización de|movimientos.
+
+
+como corregismos esto?
+CONFLICTO 1 — El método syncReadingCharge no existe (BUG CRÍTICO)
+Descripción
+Cuando GasData Capture actualiza una lectura que ya existe en el periodo (re-captura del mismo departamento), el modelo Lectura::registrarLectura() llama:
+
+quitamos la llamada?o creamos el metodo? o reutilizamos algun metodo que hace lo mismo
+pero con otro nombre o cambiamos algo del flujo?
+
+CONFLICTO 3 — lectura_ini editable en frontend de Historial, ignorado en backend
+creo te equivocas por que yo no lo veo editable
+
+CONFLICTO 5 — total_a_pagar editable manualmente en Historial sin validación
+coloca el input como no editable
+
+
+
+
+CONFLICTO 8 — Periodo del movimiento: texto descriptivo inconsistente
+solucionalo
+
+no entendi esto:
+CONFLICTO 9 — abonosPeriodo se calcula pero nunca se usa en el panel 
+
+
+
+tampoc entendi,por que haces resta y x q luego sumas, evidentemente si haces restas 
+el valor quedara en engativo y por que luegosumas pero la suma no cuadra
+CONFLICTO 10 — initialBalance puede quedar negativo creando confusión en el Balance Final
+Descripción
+javascript
+this.initialBalance = saldo;
+if (lectura) this.initialBalance -= parseFloat(lectura.total_a_pagar || 0);
+saldo es el saldo global histórico. Se le resta total_a_pagar del periodo para obtener "el saldo antes de este periodo".
+
+Problema: Si el saldo global es positivo pero menor que total_a_pagar, el initialBalance queda negativo, sugiriendo que el cliente tenía saldo a favor antes del periodo, lo cual puede no ser cierto.
+
+Ejemplo:
+
+Saldo global = $100 (adeudo acumulado)
+total_a_pagar del periodo = $280
+initialBalance = 100 - 280 = -180 (sugiere saldo a favor previo de $180)
+totalBalance en pantalla = -180 + 280 = $100 ✅ (al final es correcto) x que daria 100?
+El valor intermedio es matemáticamente correcto pero conceptualmente confuso: el panel muestra un "Balance Anterior" negativo cuando en realidad el cliente tiene adeudo global.
+

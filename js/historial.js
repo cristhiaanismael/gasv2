@@ -94,13 +94,17 @@ window.Historial = class Historial {
         this.selectedBuildingId = id_edificio;
         this.isSearchMode = false; // Reset búsqueda al cambiar edificio
         
-        const url = API_BASE_URL + 'historial/edificio/' + id_edificio;
+        // Cache-buster: fuerza petición fresca ignorando caché del navegador/proxy
+        const url = API_BASE_URL + 'historial/edificio/' + id_edificio + '?_t=' + Date.now();
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, { cache: 'no-store' });
             if (!response.ok) throw new Error('Error API Historial: ' + response.statusText);
             const result = await response.json();
             this.data = result.data || [];
             this.renderAll();
+            
+            // Asynchronously fetch and populate the previous period's M3 readings
+            this.fetchPreviousHistorial(id_edificio);
         } catch (error) {
             console.error('Error cargando historial:', error);
             this.showToast('Error de Carga', error.message, 'error');
@@ -108,6 +112,104 @@ window.Historial = class Historial {
             this.renderAll();
         } finally {
             this._isFetchingHistorial = null;
+        }
+    }
+
+    async fetchPreviousHistorial(id_edificio) {
+        const url = API_BASE_URL + 'historial/edificio-anterior/' + id_edificio;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Error API Anterior: ' + response.statusText);
+            const prevData = await response.json();
+            
+            // Create a Map for fast lookup
+            const prevMap = new Map();
+            prevData.forEach(item => {
+                prevMap.set(String(item.id_departamento), {
+                    ltAnt: parseFloat(item.consumos_litros_ant || 0),
+                    saldoAntRecibo: parseFloat(item.saldo_anterior_recibo || 0),
+                    saldoIni: parseFloat(item.saldo_inicial || 0)
+                });
+            });
+
+            // Update local state for future rendering/filtering
+            this.data.forEach(item => {
+                const prev = prevMap.get(String(item.id_departamento)) || { ltAnt: 0, saldoAntRecibo: 0, saldoIni: 0 };
+                item.consumos_litros_ant = prev.ltAnt;
+                item.saldo_anterior_recibo = prev.saldoAntRecibo;
+                item.saldo_inicial = prev.saldoIni;
+            });
+
+            // Dynamically paint the DOM cells in-place for blazing fast response
+            prevMap.forEach((prev, deptId) => {
+
+                const $ltCell = $(`.lt-ant-cell[data-dept-id="${deptId}"]`);
+                if ($ltCell.length) {
+                    $ltCell.html(prev.ltAnt > 0 ? `<span class="text-xs font-bold text-gray-500">${prev.ltAnt.toFixed(0)}</span>` : `<span class="text-gray-300">—</span>`);
+                }
+
+                const $saldoCell = $(`.saldo-ant-cell[data-dept-id="${deptId}"]`);
+                if ($saldoCell.length) {
+                    const badge = `<span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-bold text-gray-600 bg-gray-50 border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors relative" onclick="window.historial.showReciboBreakdown(${deptId}, this)" title="Ver desglose del periodo anterior">$${prev.saldoAntRecibo.toFixed(2)}</span>`;
+                    $saldoCell.html(badge);
+                }
+
+                const $saldoIniCell = $(`.saldo-inicial-cell[data-dept-id="${deptId}"]`);
+                if ($saldoIniCell.length) {
+                    let badge = '';
+                    if (prev.saldoIni > 0.05) {
+                        badge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-100 uppercase tracking-tighter cursor-pointer hover:bg-rose-100 transition-colors group relative" onclick="window.historial.showSaldoBreakdown(${deptId}, this)">Adeudo $${prev.saldoIni.toFixed(2)}</span>`;
+                    } else if (prev.saldoIni < -0.05) {
+                        badge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-tighter cursor-pointer hover:bg-emerald-100 transition-colors group relative" onclick="window.historial.showSaldoBreakdown(${deptId}, this)">A Favor $${Math.abs(prev.saldoIni).toFixed(2)}</span>`;
+                    } else {
+                        badge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors group relative" onclick="window.historial.showSaldoBreakdown(${deptId}, this)">0.00</span>`;
+                    }
+                    $saldoIniCell.html(badge);
+                }
+            });
+
+            // Paint fallback zeros for departments without records
+            this.data.forEach(item => {
+                if (!prevMap.has(String(item.id_departamento))) {
+
+                    const $ltCell = $(`.lt-ant-cell[data-dept-id="${item.id_departamento}"]`);
+                    if ($ltCell.length) {
+                        $ltCell.html(`<span class="text-gray-300 font-medium text-xs">—</span>`);
+                    }
+
+                    const $saldoCell = $(`.saldo-ant-cell[data-dept-id="${item.id_departamento}"]`);
+                    if ($saldoCell.length) {
+                        $saldoCell.html(`<span class="text-gray-300 font-medium text-xs">—</span>`);
+                    }
+
+                    const $saldoIniCell = $(`.saldo-inicial-cell[data-dept-id="${item.id_departamento}"]`);
+                    if ($saldoIniCell.length) {
+                        $saldoIniCell.html(`<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">0.00</span>`);
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error('Error al cargar consumo y saldo anterior:', error);
+            // Replace loaders with 0.00 / '-' in case of failure
+            $(`.lt-ant-cell`).each((idx, el) => {
+                const $cell = $(el);
+                if ($cell.find('.animate-pulse').length) {
+                    $cell.html(`<span class="text-gray-300 font-medium text-xs">—</span>`);
+                }
+            });
+            $(`.saldo-ant-cell`).each((idx, el) => {
+                const $cell = $(el);
+                if ($cell.find('.animate-pulse').length) {
+                    $cell.html(`<span class="text-gray-300 font-medium text-xs">—</span>`);
+                }
+            });
+            $(`.saldo-inicial-cell`).each((idx, el) => {
+                const $cell = $(el);
+                if ($cell.find('.animate-pulse').length) {
+                    $cell.html(`<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">0.00</span>`);
+                }
+            });
         }
     }
 
@@ -156,7 +258,7 @@ window.Historial = class Historial {
         const filtered = this.data;
 
         if (filtered.length === 0) {
-            $tbody.html('<tr><td colspan="11" class="p-12 text-center text-gray-400 font-medium">No se encontraron registros para los criterios ingresados.</td></tr>');
+            $tbody.html('<tr><td colspan="14" class="p-12 text-center text-gray-400 font-medium">No se encontraron registros para los criterios ingresados.</td></tr>');
             return;
         }
 
@@ -168,13 +270,72 @@ window.Historial = class Historial {
             const correo = item.correo
                 ? item.correo
                 : '<span class="text-gray-300">Sin correo</span>';
+            const correo2 = item.correo_2
+                ? `<span class="block text-[9px] text-gray-400/70 tracking-tight mt-0.5" title="Correo secundario">alt: ${item.correo_2}</span>`
+                : '';
 
             const hasReading = !!item.id_lectura;
             const cons   = hasReading ? parseFloat(item.consumo_m3 || 0).toFixed(2) : '—';
             const lt     = hasReading ? parseFloat(item.consumos_litros || 0).toFixed(0) : '—';
+            const lectura_ini = hasReading ? parseFloat(item.lectura_ini || 0).toFixed(2) : '—';
+            const lectura_fin = hasReading ? parseFloat(item.lectura_fin || 0).toFixed(2) : '—';
             
             const totalPeriodo = parseFloat(item.total_a_pagar || 0);
             const saldoTotal   = parseFloat(item.saldo_total   || 0);
+
+            // NUEVO: Consumo Lt Anterior, Saldo Anterior de Recibo y Saldo Inicial
+            const hasPrevData = item.saldo_anterior_recibo !== undefined;
+            const consumoLtAnt = hasPrevData ? parseFloat(item.consumos_litros_ant || 0).toFixed(0) : null;
+            const saldoAntRecibo = hasPrevData ? parseFloat(item.saldo_anterior_recibo || 0) : null;
+            const saldoInicial = hasPrevData ? parseFloat(item.saldo_inicial || 0) : null;
+
+            let ltAntBadge;
+            if (hasPrevData) {
+                ltAntBadge = consumoLtAnt !== null && parseFloat(consumoLtAnt) > 0
+                    ? `<span class="text-xs font-bold text-gray-500">${consumoLtAnt}</span>`
+                    : '<span class="text-gray-300">—</span>';
+            } else {
+                ltAntBadge = `<span class="inline-block px-2.5 py-1 rounded bg-slate-50 border border-slate-100 text-slate-300 text-[10px] font-bold animate-pulse">...</span>`;
+            }
+
+            let prevBalanceBadge;
+            if (hasPrevData) {
+                prevBalanceBadge = `<span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-bold text-gray-600 bg-gray-50 border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors relative" onclick="window.historial.showReciboBreakdown(${item.id_departamento}, this)" title="Ver desglose del periodo anterior">$${saldoAntRecibo.toFixed(2)}</span>`;
+            } else {
+                prevBalanceBadge = `<span class="inline-block px-2.5 py-1 rounded bg-slate-50 border border-slate-100 text-slate-300 text-[10px] font-bold animate-pulse">...</span>`;
+            }
+
+            let initialBalanceBadge;
+            if (hasPrevData) {
+                if (saldoInicial > 0.05) {
+                    initialBalanceBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-100 uppercase tracking-tighter cursor-pointer hover:bg-rose-100 transition-colors group relative" onclick="window.historial.showSaldoBreakdown(${item.id_departamento}, this)">Adeudo $${saldoInicial.toFixed(2)}</span>`;
+                } else if (saldoInicial < -0.05) {
+                    initialBalanceBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-tighter cursor-pointer hover:bg-emerald-100 transition-colors group relative" onclick="window.historial.showSaldoBreakdown(${item.id_departamento}, this)">A Favor $${Math.abs(saldoInicial).toFixed(2)}</span>`;
+                } else {
+                    initialBalanceBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors group relative" onclick="window.historial.showSaldoBreakdown(${item.id_departamento}, this)">0.00</span>`;
+                }
+            } else {
+                initialBalanceBadge = `<span class="inline-block px-2.5 py-1 rounded bg-slate-50 border border-slate-100 text-slate-300 text-[10px] font-bold animate-pulse">...</span>`;
+            }
+
+            const ultimoAbonoMonto = item.ultimo_abono_monto ? parseFloat(item.ultimo_abono_monto).toFixed(2) : null;
+            let ultimoAbonoFecha = '';
+            if (item.ultimo_abono_fecha) {
+                // Remove time part if exists and format
+                const datePart = item.ultimo_abono_fecha.split(' ')[0];
+                const [year, month, day] = datePart.split('-');
+                ultimoAbonoFecha = `${day}/${month}/${year}`;
+            }
+
+            let ultimoAbonoBadge;
+            if (ultimoAbonoMonto) {
+                ultimoAbonoBadge = `<div class="flex flex-col items-center leading-tight">
+                                        <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">$${ultimoAbonoMonto}</span>
+                                        <span class="text-[9px] text-gray-400 font-medium mt-0.5">${ultimoAbonoFecha}</span>
+                                    </div>`;
+            } else {
+                ultimoAbonoBadge = `<span class="text-gray-300 text-xs font-medium">—</span>`;
+            }
 
             let statusBadge;
             if (!hasReading) {
@@ -223,7 +384,9 @@ window.Historial = class Historial {
                                     #${item.num_departamento}
                                 </button>
                             </div>
-                            <span class="text-[8px] font-black text-slate-400 uppercase tracking-tighter mt-1 italic">${item.nombre_edificio || 'Edificio'}</span>
+                            <span class="text-[10px] sm:text-xs font-black text-blue-700 bg-blue-100 uppercase tracking-widest mt-1.5 px-2 py-0.5 rounded-md border border-blue-200 inline-block shadow-sm">
+                                ${item.nombre_edificio || 'Edificio'}
+                            </span>
                         </div>
                     </td>
                     <td class="px-4 py-4">
@@ -233,26 +396,61 @@ window.Historial = class Historial {
                                 ${matchFeedback}
                             </div>
                             <span class="text-[10px] font-medium text-gray-400 tracking-tight">${correo}</span>
+                            ${correo2}
                         </div>
                     </td>
+                    
+                    <!-- LECTURAS -->
+                    <td class="px-4 py-4 text-center font-bold text-gray-500 text-sm">
+                        ${lectura_ini}
+                    </td>
+                    <td class="px-4 py-4 text-center font-bold text-gray-700 text-sm">
+                        ${lectura_fin}
+                    </td>
+                    <td class="px-4 py-4 text-center lt-ant-cell font-bold text-gray-500 text-sm" data-dept-id="${item.id_departamento}">
+                        ${ltAntBadge}
+                    </td>
+                    <td class="px-4 py-4 text-center saldo-ant-cell" data-dept-id="${item.id_departamento}">
+                        ${prevBalanceBadge}
+                    </td>
+                    <td class="px-4 py-4 text-center saldo-inicial-cell" data-dept-id="${item.id_departamento}">
+                        ${initialBalanceBadge}
+                    </td>
+
                     <td class="px-4 py-4 text-center">
                         ${hasReading
                             ? `<button class="btn-view-evidence group/m3 relative inline-flex items-center justify-center" data-foto="${item.foto || ''}">
                                  <span class="text-xs font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100 group-hover/m3:bg-blue-600 group-hover/m3:text-white transition-all shadow-sm">
-                                    ${cons}
+                                    ${lt}
                                  </span>
                                  <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/m3:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">Ver Evidencia</div>
                                </button>`
                             : '<span class="text-gray-300">—</span>'}
                     </td>
-                    <td class="px-4 py-4 text-center text-xs font-bold text-slate-500">${hasReading ? lt : '—'}</td>
                     <td class="px-4 py-4 text-center font-bold text-gray-700 text-sm">${hasReading ? '$' + totalPeriodo.toFixed(2) : '—'}</td>
-                    <td class="px-4 py-4 text-center font-black ${saldoTotal > 0 ? 'text-rose-600' : 'text-emerald-600'} text-sm">
+                    <td class="px-4 py-4 text-center font-black ${saldoTotal > 0 ? 'text-rose-600' : 'text-emerald-600'} text-sm saldo-actual-cell">
                         ${hasReading ? (saldoTotal != 0 ? '$' + saldoTotal.toFixed(2) : '$0.00') : '—'}
                     </td>
-                    <td class="px-4 py-4 text-center">${statusBadge}</td>
+                    <td class="px-4 py-4 text-center ultimo-abono-cell">
+                        ${ultimoAbonoBadge}
+                    </td>
+                    <td class="px-4 py-4 text-center estado-cell">${statusBadge}</td>
                     <td class="px-4 py-4 pr-6 text-right">
                         <div class="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                            <!-- Comunication / Warning Button -->
+                            <div class="relative mr-2">
+                                <button class="p-2 rounded-lg transition-all shadow-sm border-2 ${saldoTotal > 0 ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 hover:text-rose-700' : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-700'} btn-notify-context" 
+                                        data-id="${item.id_departamento}"
+                                        data-correo="${item.correo && item.correo !== '0' ? item.correo : ''}"
+                                        data-correo2="${item.correo_2 && item.correo_2 !== '0' ? item.correo_2 : ''}"
+                                        data-nombre="${item.nombre ? (item.nombre + ' ' + (item.ape_pat || '')).trim() : 'Cliente'}"
+                                        data-num-depto="${item.num_departamento || ''}"
+                                        data-periodo="${item.periodo || ''}"
+                                        data-saldo="${saldoTotal || 0}"
+                                        title="Enviar Recordatorio/Estado de Cuenta">
+                                    <i data-lucide="${saldoTotal > 0 ? 'alert-circle' : 'mail'}" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                             <!-- PDF Status Indicator -->
                             <div class="relative">
                                 <button class="p-2 rounded-lg transition-all shadow-sm border-2 ${item.pdf_exists ? 'bg-green-600 text-white border-green-700 hover:bg-green-700' : 'bg-red-600 text-white border-red-700 hover:bg-red-700'} btn-pdf-context" 
@@ -276,32 +474,28 @@ window.Historial = class Historial {
         const totalDeptos = this.data.length;
         if (totalDeptos === 0) return;
 
-        // 1. Facturado = Sumatoria de lo que hay que cobrar (saldo_pendiente) de TODOS los deptos
-        // La suma de la columna "A Pagar" de la tabla.
-        const facturado = this.data.reduce((acc, i) => acc + Math.max(0, parseFloat(i.saldo_pendiente || 0)), 0);
+        // 1. Facturado = Suma de total_a_pagar (solo los que tienen lectura)
+        const facturado = this.data.reduce((acc, i) => acc + parseFloat(i.total_a_pagar || 0), 0);
 
-        // 2. Cobranza = % de departamentos que están al corriente (saldo <= 0)
-        const alCorriente = this.data.filter(i => parseFloat(i.saldo_pendiente || 0) <= 0).length;
-        const cobranza = (alCorriente / totalDeptos) * 100;
+        // 2. Cobranza = % de departamentos con saldo_total <= 0 (liquidados)
+        const alCorriente = this.data.filter(i => parseFloat(i.saldo_total || 0) <= 0 && !!i.id_lectura).length;
+        const conLectura = this.data.filter(i => !!i.id_lectura).length;
+        const cobranza = conLectura > 0 ? (alCorriente / conLectura) * 100 : 0;
 
-        // 3. Consumo Total = Sumatoria de consumo_m3 (solo los que tienen lectura)
-        const consumoM3 = this.data.reduce((acc, i) => acc + parseFloat(i.consumo_m3 || 0), 0);
+        // 3. Consumo Total = Sumatoria de consumos_litros (solo los que tienen lectura)
+        const consumoLt = this.data.reduce((acc, i) => acc + parseFloat(i.consumos_litros || 0), 0);
 
-        // 4. Ingresos Recaudados = Suma de abonos aplicados en este periodo (o simplemente facturado - pendiente)
-        // Para simplificar y ser consistente: Mostramos cuánto dinero real ha entrado.
-        // Si el saldo pendiente es menor al total facturado histórico, la diferencia es recaudo.
-        // Nota: Esta métrica es proyectada sobre el saldo actual.
-        const saldoPendienteTotal = this.data.reduce((acc, i) => acc + Math.max(0, parseFloat(i.saldo_pendiente || 0)), 0);
+        // 4. Pendiente Total = suma de saldos positivos (lo que aún se debe)
+        const saldoPendienteTotal = this.data.reduce((acc, i) => acc + Math.max(0, parseFloat(i.saldo_total || 0)), 0);
         
-        // El acumulado real que ha entrado es el total de cargos - total pendiente
-        // Pero para este periodo usaremos una lógica de "Avance de Cobranza en $"
+        // Ingresos recaudados: lo que se facturó menos lo que queda pendiente
         const recaudado = Math.max(0, facturado - saldoPendienteTotal); 
 
         // Progreso visual
         const progressPercent = facturado > 0 ? (recaudado / facturado) * 100 : 0;
 
         $('#kpi-facturado').text(`$${facturado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-        $('#kpi-consumo').html(`${consumoM3.toFixed(2)} <span class="text-sm text-gray-400 font-medium">m³</span>`);
+        $('#kpi-consumo').html(`${consumoLt.toFixed(0)} <span class="text-sm text-gray-400 font-medium">lt</span>`);
         $('#kpi-cobranza').text(`${cobranza.toFixed(0)}%`);
         $('#kpi-progreso').text(`$${recaudado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
         $('#kpi-progress-bar').css('width', `${progressPercent}%`);
@@ -354,8 +548,10 @@ window.Historial = class Historial {
 
         try {
             // 3. CARGA FASE 1: DATOS CORE (Inputs y Saldos)
-            const response = await fetch(API_BASE_URL + 'historial/detalle/' + id_departamento);
+            // Cache-buster para obtener saldo y abonos siempre frescos del servidor
+            const response = await fetch(API_BASE_URL + 'historial/detalle/' + id_departamento + '?_t=' + Date.now(), { cache: 'no-store' });
             if (!response.ok) throw new Error('Error al cargar detalles');
+
             
             const res = await response.json();
             const { depto, lectura, saldo, abonosPeriodo, periodo, periodo_data, config, lec_ant_sugerida } = res;
@@ -363,17 +559,17 @@ window.Historial = class Historial {
             this.currentLecturaId = lectura ? lectura.id_lectura : null;
             this.currentDeptoNum = depto.num_departamento;
             this.currentSaldo = saldo;
-            this.currentAbonosPeriodo = abonosPeriodo || 0;
+            this.currentAbonosPeriodo = res.abonos_periodo !== undefined ? parseFloat(res.abonos_periodo) : (abonosPeriodo || 0);
             this.currentConfig = config || { precioLitro: 0, factor: 1, cuotaAdmin: 0 };
             
-            this.initialBalance = saldo;
-            if (lectura) this.initialBalance -= parseFloat(lectura.total_a_pagar || 0);
+            // Usar el saldo inicial real calculado con precisión por el backend
+            this.initialBalance = res.saldo_inicial !== undefined ? parseFloat(res.saldo_inicial) : (saldo - (lectura ? parseFloat(lectura.total_a_pagar || 0) : 0));
             
             this.periodAdeudos = lectura ? parseFloat(lectura.adeudos || 0) : 0;
             this.periodSaldoFavor = lectura ? parseFloat(lectura.saldo_favor || 0) : 0;
 
             // Poblar campos base
-            $(selectors.unitName).text(`Depto ${depto.num_departamento}`);
+            $(selectors.unitName).html(`Depto ${depto.num_departamento} <span class="text-xs text-slate-500 font-bold ml-2 uppercase tracking-widest bg-slate-200/50 px-2 py-1 rounded-md border border-slate-200">${depto.num_edificio || 'Edificio'}</span>`);
             $(selectors.periodLabel).text(periodo || '---');
             $('#lbl-val-precio').text(`$${this.currentConfig.precioLitro.toFixed(2)}`);
             $('#lbl-val-factor').text(`${this.currentConfig.factor.toFixed(3)}`);
@@ -394,9 +590,21 @@ window.Historial = class Historial {
             $(selectors.lblMontoGas).text(lectura ? '$' + parseFloat(lectura.monto || 0).toFixed(2) : '$0.00');
 
             // Las columnas 'adeudos' y 'saldo_favor' de la tabla lectura están descartadas.
-            // Siempre mostraremos el saldo actual calculado desde movimientos.
-            $(selectors.lblSaldoFavor).text(saldo < 0 ? '$' + Math.abs(saldo).toFixed(2) : '$0.00');
-            $(selectors.lblAdeudos).text(saldo > 0 ? '$' + saldo.toFixed(2) : '$0.00');
+            // Siempre mostraremos el saldo anterior calculado antes del periodo.
+            $(selectors.lblSaldoFavor).text(this.initialBalance < 0 ? '$' + Math.abs(this.initialBalance).toFixed(2) : '$0.00');
+            $(selectors.lblAdeudos).text(this.initialBalance > 0 ? '$' + this.initialBalance.toFixed(2) : '$0.00');
+
+            // Inyectar abonos del periodo si es mayor a cero (Conflicto 9)
+            if (this.currentAbonosPeriodo > 0.05) {
+                $('#lbl-abonos-periodo-container').html(`
+                    <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl flex items-center justify-between px-3 shadow-sm mt-2 animate-in fade-in duration-300">
+                        <span class="text-[8px] font-black text-emerald-700 uppercase tracking-wider">Abonos este Periodo:</span>
+                        <span class="text-[10px] font-black text-emerald-800">$${this.currentAbonosPeriodo.toFixed(2)}</span>
+                    </div>
+                `);
+            } else {
+                $('#lbl-abonos-periodo-container').empty();
+            }
 
             // 4. CARGA FASE 2: HISTORIAL Y NOTAS (Paralelo y Asíncrono)
             this.loadSidebarExtras(id_departamento, periodo);
@@ -404,6 +612,84 @@ window.Historial = class Historial {
             lucide.createIcons();
         } catch (error) {
             this.showToast('Error', error.message, 'error');
+        }
+    }
+
+    /**
+     * Refresca solo las celdas que cambian en la fila de un departamento:
+     * Saldo Actual, Estado y Último Abono.
+     * Actualiza this.data en memoria y pinta quirúrgicamente las celdas
+     * SIN re-renderizar toda la tabla (para no perder los datos del periodo anterior).
+     */
+    async refreshMainTableRow(id_departamento) {
+        try {
+            const res = await fetch(API_BASE_URL + 'historial/detalle/' + id_departamento + '?_t=' + Date.now());
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const saldoFresh = parseFloat(data.saldo || 0);
+            const lectura = data.lectura;
+
+            // 1. Actualizar this.data en memoria
+            const idx = this.data.findIndex(i => String(i.id_departamento) === String(id_departamento));
+            if (idx !== -1) {
+                this.data[idx].saldo_total = saldoFresh;
+                if (lectura) {
+                    this.data[idx].id_lectura       = lectura.id_lectura;
+                    this.data[idx].consumo_m3       = lectura.consumo_m3;
+                    this.data[idx].consumos_litros  = lectura.consumos_litros;
+                    this.data[idx].total_a_pagar    = lectura.total_a_pagar;
+                    this.data[idx].lectura_ini      = lectura.lectura_ini;
+                    this.data[idx].lectura_fin      = lectura.lectura_fin;
+                    this.data[idx].cargos_add       = lectura.cargos_add;
+                    this.data[idx].foto             = lectura.foto;
+                }
+                if (data.ultimo_abono) {
+                    this.data[idx].ultimo_abono_monto = data.ultimo_abono.monto;
+                    this.data[idx].ultimo_abono_fecha = data.ultimo_abono.fecha;
+                }
+            }
+
+            // 2. Actualizar quirúrgicamente las celdas en el DOM (sin re-renderizar toda la tabla)
+            const $row = $(`.depto-checkbox[data-id="${id_departamento}"]`).closest('tr');
+            if ($row.length) {
+                // Celda: Saldo Actual (buscar por clase específica dentro de la fila)
+                const colorClass = saldoFresh > 0 ? 'text-rose-600' : 'text-emerald-600';
+                $row.find('td.saldo-actual-cell')
+                    .attr('class', `px-4 py-4 text-center font-black ${colorClass} text-sm saldo-actual-cell`)
+                    .text(saldoFresh !== 0 ? '$' + saldoFresh.toFixed(2) : '$0.00');
+
+                // Celda: Estado
+                let statusHtml;
+                const hasReading = !!( lectura ? lectura.id_lectura : (idx !== -1 ? this.data[idx].id_lectura : null) );
+                if (!hasReading) {
+                    statusHtml = '<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gray-100 text-gray-500 border border-gray-200">Sin Lectura</span>';
+                } else if (saldoFresh <= 0) {
+                    statusHtml = '<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-green-100 text-green-700 border border-green-200">Pagado</span>';
+                } else {
+                    statusHtml = '<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">Pendiente</span>';
+                }
+                $row.find('td.estado-cell').html(statusHtml);
+
+                // Celda: Último Abono
+                if (data.ultimo_abono) {
+                    const monto = parseFloat(data.ultimo_abono.monto).toFixed(2);
+                    const datePart = (data.ultimo_abono.fecha || '').split(' ')[0];
+                    const [year, month, day] = datePart.split('-');
+                    const fechaFmt = day && month && year ? `${day}/${month}/${year}` : '';
+                    $row.find('td.ultimo-abono-cell').html(`
+                        <div class="flex flex-col items-center leading-tight">
+                            <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">$${monto}</span>
+                            <span class="text-[9px] text-gray-400 font-medium mt-0.5">${fechaFmt}</span>
+                        </div>`);
+                }
+            }
+
+            // 3. Actualizar KPIs (esto sí puede hacerse siempre)
+            this.renderKPIs();
+
+        } catch (e) {
+            console.error('Error refreshMainTableRow:', e);
         }
     }
 
@@ -455,12 +741,240 @@ window.Historial = class Historial {
 
         $panel.addClass('translate-x-full');
         $backdrop.removeClass('opacity-100');
-        setTimeout(() => {
-            $backdrop.addClass('hidden');
-            $('#panel-header-actions').empty();
-            this.currentDeptoId = null;
-            this.currentLecturaId = null;
-        }, 300);
+        $backdrop.addClass('hidden');
+        $('#panel-header-actions').empty();
+        this.currentDeptoId = null;
+        this.currentLecturaId = null;
+    }
+
+    /**
+     * Muestra el desglose elegante del Saldo Cierre(ant) — lo que arrastró al periodo actual.
+     * Agrupa movimientos en Cargos y Abonos, mostrando la fórmula de cierre.
+     */
+    async showSaldoBreakdown(id_departamento, targetElement) {
+        if (!id_departamento) return;
+        
+        if (this._isFetchingBreakdown) return;
+        this._isFetchingBreakdown = true;
+        
+        const $target = $(targetElement);
+        const originalHtml = $target.html();
+        $target.html('<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i>');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        try {
+            const response = await fetch(API_BASE_URL + 'historial/breakdown-saldo/' + id_departamento);
+            if (!response.ok) throw new Error('Error al cargar desglose');
+            
+            const movs = await response.json();
+            
+            $('.saldo-popover').remove();
+            $target.html(originalHtml);
+
+            if (!movs || movs.length === 0) {
+                this.showToast('Info', 'Sin movimientos en el periodo anterior.', 'info');
+                return;
+            }
+
+            // Separar y calcular totales
+            const cargos  = movs.filter(m => m.tipo === 'cargo');
+            const abonos  = movs.filter(m => m.tipo !== 'cargo');
+            const totalCargos = cargos.reduce((s, m) => s + parseFloat(m.monto), 0);
+            const totalAbonos = abonos.reduce((s, m) => s + parseFloat(m.monto), 0);
+            const saldoCierre = totalCargos - totalAbonos;
+            const saldoColor  = saldoCierre > 0.05 ? 'text-rose-300' : saldoCierre < -0.05 ? 'text-emerald-300' : 'text-slate-300';
+            const saldoLabel  = saldoCierre > 0.05 ? 'Adeudo arrastrado' : saldoCierre < -0.05 ? 'A favor arrastrado' : 'Liquidado';
+
+            const renderRow = (m, isCargo) => {
+                const icon  = isCargo ? 'trending-up' : 'trending-down';
+                const color = isCargo ? 'text-rose-400' : 'text-emerald-400';
+                const bg    = isCargo ? 'bg-rose-500/10 border-rose-500/20' : 'bg-emerald-500/10 border-emerald-500/20';
+                const sign  = isCargo ? '+' : '−';
+                const date  = m.fecha ? new Date(m.fecha).toLocaleDateString('es-MX', {day: '2-digit', month: 'short'}) : '';
+                return `
+                    <div class="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-slate-800/60 transition-colors group">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 border ${bg}">
+                                <i data-lucide="${icon}" class="w-2.5 h-2.5 ${color}"></i>
+                            </div>
+                            <div class="flex flex-col min-w-0">
+                                <span class="text-[9px] font-semibold text-slate-200 truncate leading-tight">${m.descripcion || (isCargo ? 'Cargo' : 'Abono')}</span>
+                                ${date ? `<span class="text-[8px] text-slate-500">${date}</span>` : ''}
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-black ${color} ml-2 flex-shrink-0">${sign}$${parseFloat(m.monto).toFixed(2)}</span>
+                    </div>
+                `;
+            };
+
+            let html = `
+                <div class="saldo-popover absolute z-[200] bottom-full left-1/2 -translate-x-1/2 mb-3 w-80 bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/80 overflow-hidden" onclick="event.stopPropagation()" style="backdrop-filter: blur(16px);">
+
+                    <!-- Header -->
+                    <div class="px-3 pt-3 pb-2 border-b border-slate-700/60 flex items-center justify-between bg-gradient-to-r from-slate-800 to-slate-900">
+                        <div class="flex items-center gap-2">
+                            <div class="w-5 h-5 bg-slate-700 rounded-lg flex items-center justify-center">
+                                <i data-lucide="git-branch" class="w-3 h-3 text-slate-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-none">Saldo Cierre</p>
+                                <p class="text-[8px] text-slate-500 leading-none mt-0.5">Periodo anterior</p>
+                            </div>
+                        </div>
+                        <button onclick="$(this).closest('.saldo-popover').remove(); event.stopPropagation();"
+                                class="w-5 h-5 rounded-md flex items-center justify-center text-slate-500 hover:text-white hover:bg-slate-700 transition-all">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-2 space-y-1 max-h-52 overflow-y-auto custom-scrollbar">
+
+                        <!-- CARGOS -->
+                        ${cargos.length > 0 ? `
+                        <div class="px-1 pt-1">
+                            <p class="text-[8px] font-black text-rose-400/80 uppercase tracking-widest mb-1 px-1">
+                                Cargos <span class="text-rose-500/60 font-semibold">+$${totalCargos.toFixed(2)}</span>
+                            </p>
+                            <div class="space-y-0.5">
+                                ${cargos.map(m => renderRow(m, true)).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- ABONOS -->
+                        ${abonos.length > 0 ? `
+                        <div class="px-1 pt-1">
+                            <p class="text-[8px] font-black text-emerald-400/80 uppercase tracking-widest mb-1 px-1">
+                                Abonos <span class="text-emerald-500/60 font-semibold">−$${totalAbonos.toFixed(2)}</span>
+                            </p>
+                            <div class="space-y-0.5">
+                                ${abonos.map(m => renderRow(m, false)).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Footer: Resultado -->
+                    <div class="px-3 py-2.5 bg-slate-800/70 border-t border-slate-700/60 flex items-center justify-between">
+                        <div>
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-wider">${saldoLabel}</p>
+                            <p class="text-[8px] text-slate-600 mt-0.5">= $${totalCargos.toFixed(2)} − $${totalAbonos.toFixed(2)}</p>
+                        </div>
+                        <span class="text-sm font-black ${saldoColor}">$${Math.abs(saldoCierre).toFixed(2)}</span>
+                    </div>
+
+                    <!-- Flecha -->
+                    <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-b border-r border-slate-700 transform rotate-45"></div>
+                </div>
+            `;
+
+            $target.append(html);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            setTimeout(() => {
+                $(document).one('click', function(e) {
+                    if (!$(e.target).closest('.saldo-popover').length) {
+                        $('.saldo-popover').remove();
+                    }
+                });
+            }, 100);
+            
+        } catch (error) {
+            $target.html(originalHtml);
+            this.showToast('Error', error.message, 'error');
+        } finally {
+            this._isFetchingBreakdown = false;
+        }
+    }
+
+    /**
+     * Muestra el desglose del recibo anterior (para la columna Recibo Ant.)
+     */
+    async showReciboBreakdown(id_departamento, targetElement) {
+        if (!id_departamento) return;
+        
+        if (this._isFetchingBreakdown) return;
+        this._isFetchingBreakdown = true;
+        
+        const $target = $(targetElement);
+        const originalHtml = $target.html();
+        $target.html('<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i>');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        try {
+            const response = await fetch(API_BASE_URL + 'historial/breakdown-recibo-ant/' + id_departamento);
+            if (!response.ok) throw new Error('Error al cargar desglose');
+            
+            const data = await response.json();
+            
+            // Remove existing popovers
+            $('.saldo-popover').remove();
+            
+            $target.html(originalHtml);
+
+            if (!data || !data.desglose || data.desglose.length === 0) {
+                this.showToast('Info', 'No hay detalles del recibo anterior.', 'info');
+                return;
+            }
+
+            let html = `
+                <div class="saldo-popover absolute z-[100] bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-slate-900 rounded-xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-200" onclick="event.stopPropagation()">
+                    <div class="p-3 border-b border-slate-700 bg-slate-800/50 rounded-t-xl flex justify-between items-center">
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Desglose de Recibo Ant.</span>
+                        <button onclick="$(this).closest('.saldo-popover').remove(); event.stopPropagation();" class="text-slate-400 hover:text-white">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    <div class="p-2 max-h-48 overflow-y-auto custom-scrollbar space-y-1">
+            `;
+            
+            data.desglose.forEach(m => {
+                const isCargo = m.tipo === 'cargo';
+                const icon = isCargo ? 'plus' : 'minus';
+                const color = isCargo ? 'text-rose-400' : 'text-emerald-400';
+                const bg = isCargo ? 'bg-rose-500/10' : 'bg-emerald-500/10';
+                const sign = isCargo ? '+' : '-';
+                
+                html += `
+                    <div class="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-5 h-5 rounded flex items-center justify-center ${bg}">
+                                <i data-lucide="${icon}" class="w-3 h-3 ${color}"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-200">${m.descripcion}</span>
+                        </div>
+                        <span class="text-[10px] font-black ${color}">${sign}$${parseFloat(m.monto).toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <div class="p-2 bg-slate-800/80 border-t border-slate-700 rounded-b-xl flex justify-between items-center">
+                        <span class="text-[10px] font-black text-slate-400 uppercase">Total Recibo</span>
+                        <span class="text-xs font-black text-white">$${parseFloat(data.total).toFixed(2)}</span>
+                    </div>
+                    <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-b border-r border-slate-700 transform rotate-45"></div>
+                </div>
+            `;
+            
+            $target.append(html);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            setTimeout(() => {
+                $(document).one('click', function(e) {
+                    if (!$(e.target).closest('.saldo-popover').length) {
+                        $('.saldo-popover').remove();
+                    }
+                });
+            }, 100);
+            
+        } catch (error) {
+            $target.html(originalHtml);
+            this.showToast('Error', error.message, 'error');
+        } finally {
+            this._isFetchingBreakdown = false;
+        }
     }
 
     updatePanelTotal() {
@@ -478,16 +992,22 @@ window.Historial = class Historial {
 
         // Consumos
         const m3 = Math.max(0, lecAct - lecAnt);
-        const lt = m3 * config.factor;
-        const montoGas = lt * config.precioLitro;
+        const lt = Number((m3 * config.factor).toFixed(3));
+        const montoGas = Number((lt * config.precioLitro).toFixed(3));
 
         // Mostrar consumos
-        $(selectors.lblConsumom3).text(m3.toFixed(2));
+        $(selectors.lblConsumom3).text(m3);
         $(selectors.lblConsumolt).text(lt.toFixed(2));
         $(selectors.lblMontoGas).text('$' + montoGas.toFixed(2));
 
         // 1. Total del Periodo (Solo lo correspondiente a esta lectura/mes)
-        const totalPeriodo = montoGas + config.cuotaAdmin + add + ajuste;
+        let totalPeriodo = montoGas + config.cuotaAdmin + add + ajuste;
+        
+        // REGLA DE NEGOCIO: Si la lectura actual es igual a la anterior, el pago es 0
+        if (m3 === 0 && lecAct > 0) {
+            totalPeriodo = 0;
+        }
+
         $(selectors.inputTotal).val(totalPeriodo.toFixed(2));
 
         // 2. Saldo Neto Final (Deuda anterior + este periodo)
@@ -579,11 +1099,10 @@ window.Historial = class Historial {
 
             this.showToast('¡Éxito!', 'Lectura y notas actualizadas correctamente', 'success');
             
-            // Recargar datos de la tabla principal
-            await this.fetchHistorial(this.selectedBuildingId);
-            this.renderTable();
-            // Recargar datos para el panel (saldo, etc)
+            // Recargar panel lateral con datos frescos
             await this.openDetailPanel(this.currentDeptoId);
+            // Actualizar la fila de este depto en la tabla principal (Saldo Actual + Estado)
+            await this.refreshMainTableRow(this.currentDeptoId);
 
         } catch (error) {
             this.showToast('Error al Guardar', error.message, 'error');
@@ -593,33 +1112,50 @@ window.Historial = class Historial {
     }
 
     async submitPayment() {
+        if (this._isSubmittingPayment) return;
+        
         const selectors = HISTORIAL_CONFIG.PANEL;
         const monto = parseFloat($(selectors.inputPago).val() || 0);
-        const tipo = $(selectors.inputMovTipo).val() || 'pago'; 
+        const tipo = $(selectors.inputMovTipo).val() || 'pago';
 
         if (monto <= 0) {
             this.showToast('Monto Inválido', 'Ingrese un valor mayor a cero', 'warning');
             return;
         }
 
-        $(selectors.btnPayment).prop('disabled', true);
+        this._isSubmittingPayment = true;
+
+        const $btn = $(selectors.btnPayment);
+        const originalHtml = $btn.html();
+
+        // -- Bloquear botón con spinner --
+        $btn.prop('disabled', true)
+            .html('<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>')
+            .addClass('opacity-70 cursor-not-allowed');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        const restoreBtn = () => {
+            setTimeout(() => {
+                $btn.prop('disabled', false)
+                    .html(originalHtml)
+                    .removeClass('opacity-70 cursor-not-allowed');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }, 3000);
+        };
 
         try {
-            // Decidir endpoint según tipo
             const endpoint = (tipo === 'pago') ? 'registrar-pago' : 'registrar-ajuste';
             const payload = {
                 id_departamento: this.currentDeptoId,
-                monto: (tipo === 'ajuste') ? -monto : monto, // Ajuste (rebaja) se envía negativo al endpoint de ajustes
-                descripcion: (tipo === 'pago') ? 'Pago de Gas / Abono' : 
+                monto: (tipo === 'ajuste') ? -monto : monto,
+                descripcion: (tipo === 'pago') ? 'Pago de Gas / Abono' :
                              (tipo === 'cargo') ? 'Recargo / Ajuste manual' : 'Rebaja / Ajuste manual'
             };
 
-            // Nota: Si es tipo 'cargo', usamos registrar-ajuste con monto positivo
             if (tipo === 'cargo') {
                 payload.monto = monto;
             }
 
-            // Incluimos la lectura actual si existe para vincular el pago
             if (this.currentLecturaId) {
                 payload.id_lectura = this.currentLecturaId;
             }
@@ -632,19 +1168,25 @@ window.Historial = class Historial {
 
             if (!response.ok) throw new Error(`Error al registrar ${tipo}`);
 
-            showToast(`${tipo === 'abono' ? 'Pago' : 'Ajuste'} registrado correctamente`, 'success');
-            
+            const result = await response.json();
+
+            const tipoLabel = tipo === 'pago' ? 'Pago / Abono' : tipo === 'cargo' ? 'Recargo' : 'Ajuste';
+            this.showToast(`✅ ${tipoLabel} Registrado`, `$${monto.toFixed(2)} aplicado correctamente`, 'success');
+
             $(selectors.inputPago).val('');
 
-            // Recargar datos en cascada: Tabla Principal + Panel de Detalle
-            await this.fetchHistorial(this.selectedBuildingId);
-            this.renderTable();
-            await this.openDetailPanel(this.currentDeptoId);
+            // Refrescar fila en la tabla principal correctamente
+            await this.refreshMainTableRow(this.currentDeptoId);
+
+            // Cerrar el panel lateral
+            this.closeDetailPanel();
 
         } catch (error) {
-            showToast(error.message, 'error');
+            this.showToast('❌ Error al Registrar', error.message || 'No se pudo conectar con el servidor', 'error');
         } finally {
-            $(selectors.btnPayment).prop('disabled', false);
+            this._isSubmittingPayment = false;
+            // Restaurar botón siempre 3 segundos después de recibir respuesta
+            restoreBtn();
         }
     }
 
@@ -740,9 +1282,7 @@ window.Historial = class Historial {
         $backdrop.addClass('opacity-0');
         $content.addClass('scale-95 opacity-0').removeClass('scale-100 opacity-100');
         
-        setTimeout(() => {
-            $modal.addClass('hidden');
-        }, 300);
+        $modal.addClass('hidden');
     }
 
     // ───────────────────────────────────────────
@@ -906,7 +1446,7 @@ window.Historial = class Historial {
                                 <span class="font-bold">${fechaStr}</span>
                                 <span class="text-slate-300">|</span>
                                 <span class="font-mono text-slate-300">${horaStr}</span>
-                                ${m.tipo !== 'cargo' ? `
+                                ${(m.tipo === 'pago' || m.referencia_tipo !== 'lectura') ? `
                                     <span class="text-slate-300">|</span>
                                     <button class="btn-delete-mov text-rose-400 hover:text-rose-600 font-black uppercase text-[8px] tracking-widest ml-2" 
                                             data-id="${m.id_movimiento}">
@@ -933,9 +1473,7 @@ window.Historial = class Historial {
         $backdrop.addClass('opacity-0');
         $content.addClass('scale-95 opacity-0').removeClass('scale-100 opacity-100');
         
-        setTimeout(() => {
-            $modal.addClass('hidden');
-        }, 300);
+        $modal.addClass('hidden');
     }
 
     async deleteMovement(id) {
@@ -953,9 +1491,9 @@ window.Historial = class Historial {
 
             this.showToast('¡Movimiento Eliminado!', 'El saldo ha sido actualizado.', 'success');
             
-            // Recargar datos en el panel del depto y en la tabla principal
-            await this.fetchHistorial(this.selectedBuildingId);
-            this.renderTable();
+            // Recargar datos quirúrgicamente para no perder el estado de prevHistorial
+            await this.refreshMainTableRow(this.currentDeptoId);
+            
             await this.openDetailPanel(this.currentDeptoId);
             await this.openMovementsLog(); // Refrescar el log abierto
 
@@ -967,62 +1505,78 @@ window.Historial = class Historial {
     /**
      * Muestra una notificación visual elegante (Toast) - FIJADO Y ALINEADO
      */
+    /**
+     * Muestra una Alerta Modal Centrada de Alta Visibilidad
+     */
     showToast(title, message, type = 'info') {
-        const id = 'toast-' + Math.random().toString(36).substr(2, 9);
-        let bgColor, icon, textColor;
+        const id = 'alert-' + Math.random().toString(36).substr(2, 9);
+        let bgIconColor, icon, textColor;
 
         switch (type) {
             case 'success':
-                bgColor = 'bg-green-600'; icon = 'check-circle'; textColor = 'text-green-50';
+                bgIconColor = 'bg-emerald-100 text-emerald-600'; icon = 'check-circle'; textColor = 'text-emerald-700';
                 break;
             case 'error':
-                bgColor = 'bg-rose-600'; icon = 'alert-triangle'; textColor = 'text-rose-50';
+                bgIconColor = 'bg-rose-100 text-rose-600'; icon = 'alert-triangle'; textColor = 'text-rose-700';
                 break;
             case 'warning':
-                bgColor = 'bg-amber-500'; icon = 'alert-circle'; textColor = 'text-amber-50';
+                bgIconColor = 'bg-amber-100 text-amber-600'; icon = 'alert-circle'; textColor = 'text-amber-700';
                 break;
             default:
-                bgColor = 'bg-blue-600'; icon = 'info'; textColor = 'text-blue-50';
+                bgIconColor = 'bg-blue-100 text-blue-600'; icon = 'info'; textColor = 'text-blue-700';
         }
 
-        const toastHtml = `
-            <div id="${id}" class="flex items-center w-full max-w-xs p-4 mb-4 ${bgColor} rounded-2xl shadow-2xl opacity-0 transform translate-x-8 transition-all duration-500 ease-out z-[99999]">
-                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 ${textColor} bg-white/20 rounded-lg">
-                    <i data-lucide="${icon}" class="w-4 h-4 text-white"></i>
+        const DURATION = 3500;
+
+        const alertHtml = `
+            <div id="${id}" class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 999999999;">
+                <!-- Fondo oscuro bloqueador -->
+                <div class="absolute inset-0 bg-slate-900/40 opacity-0 transition-opacity duration-300" id="${id}-backdrop"></div>
+                
+                <!-- Caja de Alerta -->
+                <div class="relative bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-sm p-6 text-center transform scale-90 opacity-0 transition-all duration-300 flex flex-col items-center" id="${id}-box">
+                    
+                    <div class="w-16 h-16 ${bgIconColor} rounded-full flex items-center justify-center mb-4 shadow-inner">
+                        <i data-lucide="${icon}" class="w-8 h-8"></i>
+                    </div>
+                    
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-2">${title}</h3>
+                    <p class="text-sm font-medium text-slate-500 mb-6 leading-relaxed">${message || ''}</p>
+                    
+                    <button type="button" class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors uppercase tracking-wider text-xs" onclick="document.getElementById('${id}').remove()">
+                        Entendido
+                    </button>
                 </div>
-                <div class="ml-3">
-                    <h4 class="text-xs font-black text-white uppercase tracking-tight">${title}</h4>
-                    <p class="text-[10px] font-medium text-white/90 leading-tight">${message}</p>
-                </div>
-                <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-transparent text-white/50 hover:text-white rounded-lg p-1.5 inline-flex h-8 w-8" onclick="document.getElementById('${id}').remove()">
-                    <i data-lucide="x" class="w-3 h-3"></i>
-                </button>
             </div>
         `;
 
-        // Contenedor de toasts si no existe (Asegurando posición absoluta en pantalla)
-        let $container = $('#toast-container');
-        if ($container.length === 0) {
-            $('body').append('<div id="toast-container" class="fixed top-6 right-6 w-auto max-w-xs space-y-3 z-[999999]" style="pointer-events: none;"></div>');
-            $container = $('#toast-container');
-        }
-
-        const $toast = $(toastHtml);
-        $toast.css('pointer-events', 'auto'); // El toast sí debe recibir clics, el contenedor no para no bloquear
-        $container.append($toast);
-        
+        // Añadir directamente al body
+        $('body').append(alertHtml);
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
-        // Pequeño delay para disparar la animación de entrada
-        setTimeout(() => {
-            $toast.removeClass('opacity-0 translate-x-8').addClass('opacity-100 translate-x-0');
-        }, 50);
+        // Quitar el foco de cualquier input para que el Enter sirva para cerrar la alerta sin re-enviar formularios
+        if (document.activeElement) {
+            document.activeElement.blur();
+        }
 
-        // Eliminar automáticamente después de 5 segundos
-        setTimeout(() => {
-            $toast.removeClass('opacity-100 translate-x-0').addClass('opacity-0 translate-x-8');
-            setTimeout(() => $toast.remove(), 600);
-        }, 5000);
+        const $modal = $(`#${id}`);
+        const $backdrop = $(`#${id}-backdrop`);
+        const $box = $(`#${id}-box`);
+
+        // Animar entrada
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                $backdrop.removeClass('opacity-0').addClass('opacity-100');
+                $box.removeClass('scale-90 opacity-0').addClass('scale-100 opacity-100');
+            });
+        });
+
+        // Auto-eliminar
+        const timer = setTimeout(() => {
+            $backdrop.removeClass('opacity-100').addClass('opacity-0');
+            $box.removeClass('scale-100 opacity-100').addClass('scale-90 opacity-0');
+            $modal.remove();
+        }, DURATION);
     }
 
     // ───────────────────────────────────────────
@@ -1228,10 +1782,8 @@ window.Historial = class Historial {
         $backdrop.addClass('opacity-0');
         $content.addClass('scale-95 opacity-0').removeClass('scale-100 opacity-100');
         
-        setTimeout(() => {
-            $modal.addClass('hidden');
-            this.currentActiveLecturaId = null;
-        }, 300);
+        $modal.addClass('hidden');
+        this.currentActiveLecturaId = null;
     }
 
     /**
@@ -1269,9 +1821,7 @@ window.Historial = class Historial {
         $backdrop.addClass('opacity-0');
         $content.addClass('scale-95 opacity-0').removeClass('scale-100 opacity-100');
         
-        setTimeout(() => {
-            $modal.addClass('hidden');
-        }, 300);
+        $modal.addClass('hidden');
     }
 
     /**
@@ -1400,9 +1950,7 @@ window.Historial = class Historial {
         $backdrop.addClass('opacity-0');
         $content.addClass('scale-95 opacity-0').removeClass('scale-100 opacity-100');
         
-        setTimeout(() => {
-            $modal.addClass('hidden');
-        }, 300);
+        $modal.addClass('hidden');
     }
 
     /**
@@ -1434,62 +1982,67 @@ window.Historial = class Historial {
 
         $backdrop.addClass('opacity-0');
         $content.addClass('scale-95 opacity-0').removeClass('scale-100 opacity-100');
-        setTimeout(() => $modal.addClass('hidden'), 300);
+        $modal.addClass('hidden');
     }
 
     /**
-     * Motor de Búsqueda de Última Tecnología (IA Style)
-     * Ahora actualiza la tabla principal en tiempo real.
+     * Búsqueda OmniSearch (Frontend Logic)
      */
-    async performOmniSearch(q) {
-        const $dropdown = $('#search-omni-results');
-        const $body = $('#search-results-body');
+    async performOmniSearch(query, filters) {
+        if (!query || query.length < 3) return;
 
-        if (!q || q.length < 2) {
-            $dropdown.addClass('hidden');
-            $body.empty();
-            // Restaurar datos originales del edificio si se limpia la búsqueda
-            if (this.selectedBuildingId) {
-                this.fetchHistorial(this.selectedBuildingId);
-            }
-            return;
-        }
+        console.log("=== Iniciando Búsqueda ===");
+        console.log("Query:", query, "Filtros:", filters);
 
-        // Indicador de búsqueda activa en el dropdown (opcional como preview)
-        $body.html('<div class="p-4 text-center"><div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mx-auto"></div></div>');
-        $dropdown.removeClass('hidden');
+        const $btn = $('#search-omni-go');
+        const originalText = $btn.text();
 
         try {
-            const response = await fetch(API_BASE_URL + 'historial/buscar?q=' + encodeURIComponent(q));
-            if (!response.ok) throw new Error('Error en búsqueda');
-            const results = await response.json();
-            
-            // Actualizar el estado de datos global para que la tabla renderice estos resultados
-            this.data = results;
-            this.isSearchMode = true; // Flag para renderTable
-            this.renderTable();
-            
-            // También mostramos un resumen rápido en el dropdown
-            this.renderOmniResults(results);
-        } catch (e) { 
-            console.error("Error OmniSearch:", e);
-        }
-    }
+            // Estado de carga en el botón
+            $btn.prop('disabled', true).html('<i data-lucide="loader-2" class="w-3 h-3 animate-spin mx-auto"></i>');
+            lucide.createIcons();
 
-    renderOmniResults(results) {
-        const $dropdown = $('#search-omni-results');
-        const $body = $('#search-results-body');
-        
-        if (!results || results.length === 0) {
-            $body.html('<div class="p-4 text-center text-[10px] font-bold text-slate-400 uppercase">Sin hallazgos globales</div>');
-            return;
-        }
+            // Construir parámetros de la URL
+            const params = new URLSearchParams({
+                q: query,
+                filters: filters.join(',') // ej: edificio,cliente,lt
+            });
 
-        $body.html(`
-            <div class="px-4 py-2 bg-blue-50/50">
-                <span class="text-[9px] font-black text-blue-600 uppercase tracking-tighter">Se encontraron ${results.length} coincidencias en la tabla</span>
-            </div>
-        `);
+            const url = `${API_BASE_URL}historial/omnisearch?${params.toString()}`;
+            console.log("Realizando Fetch a:", url);
+
+            // Llamada al backend (endpoint pendiente de crear)
+            const response = await fetch(url);
+            
+            // Si el backend no existe lanzará error de red o 404
+            if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+            
+            const res = await response.json();
+
+            if (!res.status) throw new Error(res.message || 'Error en la búsqueda');
+
+            console.log("Datos recibidos del servidor:", res.data);
+            
+            // Inyectar los resultados en la tabla principal
+            this.isSearchMode = true;
+            this.data = res.data || [];
+            this.renderAll();
+
+            // Cargar los saldos anteriores para los edificios involucrados
+            const uniqueEdificios = [...new Set(this.data.map(item => item.id_edificio))];
+            uniqueEdificios.forEach(id_edif => {
+                if (id_edif) this.fetchPreviousHistorial(id_edif);
+            });
+            
+            if (window.showToast) window.showToast(`Búsqueda completada. ${this.data.length} coincidencias.`, 'success');
+
+        } catch (error) {
+            console.error("Error ejecutando OmniSearch:", error);
+            if (window.showToast) window.showToast('Error de conexión o Endpoint no encontrado', 'error');
+        } finally {
+            // Restaurar botón
+            $btn.prop('disabled', false).text('GO');
+        }
     }
 
     /**
@@ -1518,4 +2071,158 @@ window.Historial = class Historial {
             if (window.showToast) window.showToast(error.message, 'error');
         }
     }
+
+    // ==========================================
+    // LÓGICA DE CORREO PERSONALIZADO (MODAL)
+    // ==========================================
+
+    openEmailModal(data) {
+        // Establecer el ID en el input oculto
+        $('#email-dept-id').val(data.id);
+        
+        // Cargar opciones dinámicas basadas en el HTML de la fila
+        const $select = $('#email-recipient-type');
+        $select.empty();
+
+        const pEmail = data.correo || '';
+        const sEmail = data.correo2 || '';
+
+        const pLabel = pEmail ? pEmail : 'No registrado';
+        const sLabel = sEmail ? sEmail : 'No registrado';
+
+        $select.append(`<option value="ambos">Enviar a ambos (${pLabel}, ${sLabel})</option>`);
+        $select.append(`<option value="primario">Solo primario (${pLabel})</option>`);
+        $select.append(`<option value="secundario">Solo secundario (${sLabel})</option>`);
+        $select.append(`<option value="otro">Enviar a otro correo...</option>`);
+        
+        // Si no tiene ninguno, seleccionar "otro" por defecto
+        // Modificado por petición del usuario: seleccionar siempre "ambos" por defecto
+        $select.val('ambos');
+        
+        // Reset inputs
+        $('#email-custom-address').val('');
+        this.handleEmailTypeChange();
+
+        // Reset radio button to preconfigurado
+        $('input[name="email-msg-type"][value="preconfigurado"]').prop('checked', true);
+        
+        // Poner texto de carga
+        $('#email-subject').val('Cargando plantilla...');
+        $('#email-message').val('Por favor espere, obteniendo configuración...');
+        $('#btn-send-email').prop('disabled', true);
+
+        // Mostrar Modal
+        $('#modal-send-email').removeClass('hidden');
+        setTimeout(() => {
+            $('#modal-email-backdrop').removeClass('opacity-0');
+            $('#modal-email-content').removeClass('scale-95 opacity-0');
+        }, 10);
+
+        // Obtener plantilla dinámica
+        fetch(API_BASE_URL + 'historial/email-template?id_departamento=' + data.id)
+            .then(response => response.json())
+            .then(res => {
+                if (res.status && res.data) {
+                    this.defaultEmailSubject = res.data.asunto;
+                    this.defaultEmailMessage = res.data.mensaje;
+                } else {
+                    this.defaultEmailSubject = `Recibo de Gas - Depto ${data.numDepto}`;
+                    this.defaultEmailMessage = `Hola ${data.nombre},\nAdjuntamos tu recibo de gas.`;
+                }
+                
+                if ($('input[name="email-msg-type"]:checked').val() === 'preconfigurado') {
+                    $('#email-subject').val(this.defaultEmailSubject);
+                    $('#email-message').val(this.defaultEmailMessage);
+                }
+            })
+            .catch(() => {
+                this.defaultEmailSubject = `Recibo de Gas - Depto ${data.numDepto}`;
+                this.defaultEmailMessage = `Hola ${data.nombre},\nAdjuntamos tu recibo de gas.`;
+                
+                if ($('input[name="email-msg-type"]:checked').val() === 'preconfigurado') {
+                    $('#email-subject').val(this.defaultEmailSubject);
+                    $('#email-message').val(this.defaultEmailMessage);
+                }
+            })
+            .finally(() => {
+                $('#btn-send-email').prop('disabled', false);
+            });
+    }
+
+    closeEmailModal() {
+        $('#modal-email-backdrop').addClass('opacity-0');
+        $('#modal-email-content').addClass('scale-95 opacity-0');
+        $('#modal-send-email').addClass('hidden');
+    }
+
+    handleEmailTypeChange() {
+        const val = $('#email-recipient-type').val();
+        if (val === 'otro') {
+            $('#custom-email-container').removeClass('hidden');
+            $('#email-custom-address').focus();
+        } else {
+            $('#custom-email-container').addClass('hidden');
+        }
+    }
+
+    handleEmailMsgTypeChange() {
+        const tipo = $('input[name="email-msg-type"]:checked').val();
+        const instance = window.historial || this;
+        
+        if (tipo === 'personalizado') {
+            $('#email-subject').val('');
+            $('#email-message').val('');
+            $('#email-subject').focus();
+        } else {
+            $('#email-subject').val(instance.defaultEmailSubject || 'Recibo de Gas');
+            $('#email-message').val(instance.defaultEmailMessage || 'Adjuntamos su recibo de gas.');
+        }
+    }
+
+    async sendCustomEmail() {
+        const id = $('#email-dept-id').val();
+        const tipo = $('#email-recipient-type').val();
+        const customEmail = $('#email-custom-address').val().trim();
+        const subject = $('#email-subject').val().trim();
+        const message = $('#email-message').val().trim();
+        const adjuntarRecibo = $('#email-attach-pdf').is(':checked') ? '1' : '0';
+
+        if (tipo === 'otro' && !customEmail) {
+            if (window.showToast) window.showToast('Debe escribir un correo válido', 'error');
+            return;
+        }
+
+        // Cerrar el modal inmediatamente para que se puedan ver las notificaciones
+        this.closeEmailModal();
+        if (window.showToast) window.showToast('Enviando correo, por favor espere...', 'info');
+
+        try {
+            const formData = new FormData();
+            formData.append('id_departamento', id);
+            formData.append('tipo_envio', tipo);
+            formData.append('custom_email', customEmail);
+            formData.append('subject', subject);
+            formData.append('message', message);
+            formData.append('adjuntar_recibo', adjuntarRecibo);
+
+            const url = `${API_BASE_URL}historial/enviar-custom-email`;
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            const res = await response.json();
+            if (!response.ok) throw new Error(res.message || 'Error al enviar correo');
+
+            if (res.status) {
+                if (window.showToast) window.showToast(res.message || 'Correo enviado con éxito', 'success');
+            } else {
+                throw new Error(res.message || 'Error del servidor');
+            }
+        } catch (error) {
+            console.error(error);
+            if (window.showToast) window.showToast(error.message, 'error');
+        }
+    }
 }
+

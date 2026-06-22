@@ -113,16 +113,16 @@ $(document).ready(function () {
     const $emptyState = $("#quick-empty-state");
     let allBuildings = [];
 
-    function openQuickSelector() {
+    window.openQuickSelector = function() {
         $selector.removeClass("hidden").addClass("show");
         $searchInput.val("").focus();
         loadSelectorData();
-    }
+    };
 
-    function closeQuickSelector() {
+    window.closeQuickSelector = function() {
         $selector.removeClass("show");
         setTimeout(() => $selector.addClass("hidden"), 300);
-    }
+    };
 
     async function loadSelectorData() {
         if (allBuildings.length === 0) {
@@ -135,7 +135,7 @@ $(document).ready(function () {
             } catch (e) {
                 console.error(e);
                 showToast("Error al cargar edificios", "error");
-                closeQuickSelector();
+                window.closeQuickSelector();
                 return;
             }
         }
@@ -171,13 +171,13 @@ $(document).ready(function () {
 
     $(document).on("click", "#toggle-sidebar-btn", function (e) {
         e.preventDefault();
-        openQuickSelector();
+        window.openQuickSelector();
     });
 
-    $(document).on("click", "#selector-backdrop", closeQuickSelector);
+    $(document).on("click", "#selector-backdrop", window.closeQuickSelector);
 
     $(document).on("keydown", function (e) {
-        if (e.key === "Escape") closeQuickSelector();
+        if (e.key === "Escape") window.closeQuickSelector();
     });
 
     $searchInput.on("input", function() {
@@ -198,7 +198,7 @@ $(document).ready(function () {
         const event = new CustomEvent('building-selected', { detail: { id, name } });
         document.dispatchEvent(event);
         
-        closeQuickSelector();
+        window.closeQuickSelector();
     });
 
     // 5. SISTEMA DE TOASTS GLOBAL

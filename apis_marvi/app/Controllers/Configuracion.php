@@ -21,6 +21,13 @@ class Configuracion extends BaseController
         return $this->respond($data);
     }
 
+    public function getPeriodoActivo()
+    {
+        $model = new Cortes();
+        $periodo = $model->getActivePeriod();
+        return $this->respond(['periodo' => $periodo]);
+    }
+
     public function addPeriodo()
     {
         $model = new Cortes();
@@ -44,7 +51,7 @@ class Configuracion extends BaseController
             'status'       => 1
         ];
 
-        if ($model->insert($data)) {
+        if ($model->registrarNuevoPeriodo($data)) {
             return $this->respondCreated(['status' => 'success', 'message' => 'Periodo creado correctamente']);
         }
 

@@ -38,8 +38,8 @@ $menus = [
     [
         'id'    => 'infraestructura',
         'icon'  => 'building-2',
-        'label' => 'Edificios y Tanques',
-        'url'   => '#',
+        'label' => 'Edificios y Clientes',
+        'url'   => 'edificios_clientes.php',
         'badge' => null
     ],
     [

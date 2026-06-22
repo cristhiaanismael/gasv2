@@ -19,7 +19,19 @@ class Precio_litros extends Model
         $precio = $this->where('id_edificio', $id_edificio)
                        ->orderBy('id_precio', 'DESC')
                        ->first();
-        
+
         return floatval($precio['costo'] ?? 0);
+    }
+
+    /**
+     * Registra un nuevo precio de gas para un edificio.
+     */
+    public function registrar($id_edificio, $costo)
+    {
+        return $this->insert([
+            'producto'    => 'gas',
+            'costo'       => $costo,
+            'id_edificio' => $id_edificio
+        ]);
     }
 }

@@ -25,9 +25,39 @@
   </div>
   <div class="flex items-center space-x-4">
     <span
+      id="navbar-active-period"
       class="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full hidden sm:inline"
-      >Periodo: Febrero 2026 - Marzo 2026</span
+      >Periodo: ---</span
     >
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Usa el base_url o la ruta relativa para funcionar en cualquier página del sistema,
+        // independientemente de si historial_config.js está cargado o no.
+        const apiBase = window.API_BASE_URL || 'apis_marvi/public/api/';
+        
+        function fetchPeriodo(url) {
+            return fetch(url + 'config/periodo-activo')
+                .then(response => {
+                    if (!response.ok) throw new Error('Not OK');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.periodo) {
+                        const el = document.getElementById('navbar-active-period');
+                        if (el) el.textContent = 'Periodo: ' + data.periodo;
+                    }
+                });
+        }
+
+        // Primero intenta con el base URL. Si falla (mod_rewrite deshabilitado en XAMPP),
+        // reintenta con el fallback explícito con index.php
+        fetchPeriodo(apiBase)
+            .catch(() => {
+                const safeFallback = 'apis_marvi/public/index.php/api/';
+                fetchPeriodo(safeFallback).catch(err => console.error('[Navbar] Error al obtener periodo activo:', err));
+            });
+    });
+    </script>
     <div class="flex items-center space-x-6 border-l border-gray-100 pl-4">
         <div class="flex flex-col items-end hidden sm:flex">
             <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Conectado como</span>

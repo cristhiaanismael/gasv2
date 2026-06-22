@@ -46,44 +46,136 @@ function bindHistorialEvents(historial) {
         historial.selectBuilding(e.detail.name, e.detail.id);
     });
 
-    // Buscador Inteligente AI (OmniSearch)
-    let searchTimer;
-    $(document).on('input', '#search-omni-input', function() {
-        clearTimeout(searchTimer);
-        const q = $(this).val().trim();
-        searchTimer = setTimeout(() => {
-            historial.performOmniSearch(q);
-        }, 300);
-    });
+    // Cierre de Modales y Alertas con ESC y ENTER
+    $(document).off('keydown.historial_modals').on('keydown.historial_modals', function(e) {
+        if (e.key === 'Escape' || e.key === 'Enter') {
+            // No intervenir si están escribiendo en un campo de texto y presionan Enter
+            if (e.key === 'Enter' && ($(e.target).is('textarea') || $(e.target).is('input[type="text"]'))) {
+                // Dejar que el enter funcione normal en inputs/textareas
+                return;
+            }
 
-    // Cerrar dropdown al hacer clic fuera
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('#search-omni-container, #search-omni-results').length) {
-            $('#search-omni-results').addClass('hidden');
+            // 1. Cerrar Alertas de Alta Visibilidad (highVisibilityAlert)
+            const $alerts = $('[id^="alert-"]');
+            if ($alerts.length > 0) {
+                // Siempre cerrar TODAS las alertas emergentes visibles para evitar encimamientos
+                $alerts.remove();
+                if (e.key === 'Enter') e.preventDefault();
+                return;
+            }
+
+            // 2. Modales del Módulo Historial
+            const activeModals = [
+                { selector: '#modal-send-email', closeFn: () => historial.closeEmailModal() },
+                { selector: '#modal-history-expanded', closeFn: () => historial.closeHistoryModal() },
+                { selector: '#modal-movements-log', closeFn: () => historial.closeMovementsLog() },
+                { selector: '#modal-notes-chat', closeFn: () => historial.closeNotesModal() },
+                { selector: '#modal-evidence-viewer', closeFn: () => historial.closeEvidenceModal() },
+                { selector: '#modal-zip-diagnosis', closeFn: () => historial.closeZipModal() },
+                { selector: '#modal-global-help', closeFn: () => historial.closeHelpModal() }
+            ];
+
+            for (let modal of activeModals) {
+                const $m = $(modal.selector);
+                if ($m.length && !$m.hasClass('hidden')) {
+                    if (e.key === 'Escape') {
+                        modal.closeFn();
+                    } else if (e.key === 'Enter') {
+                        // En modales funcionales, si hay un botón principal, intentar dar clic en lugar de cerrar
+                        // a menos que sea un modal puramente informativo
+                        const $primaryBtn = $m.find('button.bg-blue-600, button.bg-emerald-600, button#btn-send-custom-email, button#btn-add-note, button[type="submit"]');
+                        if ($primaryBtn.length && $primaryBtn.is(':visible')) {
+                            $primaryBtn.click();
+                        } else {
+                            modal.closeFn(); // Si no hay botón de acción primaria, cerrar
+                        }
+                    }
+                    if (e.key === 'Enter') e.preventDefault();
+                    return; // Detenerse en el modal superior
+                }
+            }
+
+            // 3. Panel Deslizable Lateral
+            const $backdropPanel = $('#panel-backdrop');
+            if ($backdropPanel.length && !$backdropPanel.hasClass('hidden')) {
+                if (e.key === 'Escape') {
+                    historial.closeDetailPanel();
+                    return;
+                }
+            }
         }
     });
 
-    // Acción al pulsar un resultado
-    $(document).on('click', '.omni-result-item', function() {
-        const id = $(this).data('id');
-        const isLocal = $(this).data('local');
+    // Control UI Buscador: Habilitar botón Go con >= 3 caracteres
+    $(document).on('input', '#search-omni-input', async function() {
+        const len = $(this).val().trim().length;
+        // Habilitar el botón si tiene >= 3 caracteres O si está completamente vacío (para poder "limpiar" con un Enter)
+        $('#search-omni-go').prop('disabled', len > 0 && len < 3);
         
-        $('#search-omni-results').addClass('hidden');
-        
-        if (isLocal) {
-            // Ir al detalle local
-            historial.openDetailPanel(id);
-            // Autofoco/Scroll a la fila
-            const $row = $(`button.btn-open-detail[data-id="${id}"]`).closest('tr');
-            if ($row.length) {
-                $row[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                $row.addClass('bg-blue-100 ring-2 ring-blue-400');
-                setTimeout(() => $row.removeClass('bg-blue-100 ring-2 ring-blue-400'), 2000);
+        if (len === 0 && window.historial && window.historial.isSearchMode) {
+            window.historial.isSearchMode = false;
+            if (window.historial.selectedBuildingId) {
+                await window.historial.fetchHistorial(window.historial.selectedBuildingId);
+                window.historial.renderAll();
+                window.historial.fetchPreviousHistorial(window.historial.selectedBuildingId);
             }
-        } else {
-            // Mostrar info discreta para otro edificio
-            historial.showToast('Info Global', `Esta unidad pertenece al edificio: ${$(this).data('building-name')}`, 'info');
-            // Podríamos implementar un preview modal si se requiere
+        }
+    });
+
+    // Control UI Buscador: Mostrar/Ocultar Filtros robustamente
+    $('#search-omni-container, #search-filters-container').on('mouseenter', function() {
+        $('#search-filters-container').removeClass('hidden');
+    });
+    $('.group').on('mouseleave', function() {
+        if (!$('#search-omni-input').is(':focus')) {
+            $('#search-filters-container').addClass('hidden');
+        }
+    });
+    $('#search-omni-input').on('focus', function() {
+        $('#search-filters-container').removeClass('hidden');
+    });
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.group').length) {
+            $('#search-filters-container').addClass('hidden');
+        }
+    });
+
+    // Eventos del buscador OmniSearch
+    const triggerOmniSearch = async () => {
+        const query = $('#search-omni-input').val().trim();
+        
+        // Si está vacío, forzamos la restauración igual que en el evento input
+        if (query.length === 0) {
+            if (window.historial && window.historial.isSearchMode) {
+                window.historial.isSearchMode = false;
+                if (window.historial.selectedBuildingId) {
+                    await window.historial.fetchHistorial(window.historial.selectedBuildingId);
+                    window.historial.renderAll();
+                    window.historial.fetchPreviousHistorial(window.historial.selectedBuildingId);
+                }
+            }
+            return;
+        }
+        
+        if (query.length < 3) return; // Validación extra de seguridad
+
+        const filters = [];
+        $('.search-filter-cb:checked').each(function() {
+            filters.push($(this).val());
+        });
+
+        window.historial.performOmniSearch(query, filters);
+    };
+
+    $(document).on('click', '#search-omni-go, #search-omni-icon-btn', function(e) {
+        e.preventDefault();
+        triggerOmniSearch();
+    });
+
+    $(document).on('keypress', '#search-omni-input', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            triggerOmniSearch();
         }
     });
 
@@ -121,6 +213,13 @@ function bindHistorialEvents(historial) {
 
     $(document).on('click', HISTORIAL_CONFIG.PANEL.btnPayment, () => {
         historial.submitPayment();
+    });
+
+    $(document).on('keydown', HISTORIAL_CONFIG.PANEL.inputPago, function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            historial.submitPayment();
+        }
     });
 
     // --- EVIDENCIA Y FOTO ---
@@ -209,6 +308,26 @@ function bindHistorialEvents(historial) {
             window.open(`${API_BASE_URL}historial/pdf/${id}`, '_blank');
         } else {
             historial.executePdfAction(id, { nosend: !isMasterOn });
+        }
+    });
+
+    $(document).on('click', '.btn-notify-context', function (e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const data = {
+            id: $btn.data('id'),
+            correo: $btn.data('correo'),
+            correo2: $btn.data('correo2'),
+            nombre: $btn.data('nombre'),
+            numDepto: $btn.data('num-depto'),
+            periodo: $btn.data('periodo'),
+            saldo: parseFloat($btn.data('saldo') || 0)
+        };
+        
+        if (typeof historial !== 'undefined') {
+            historial.openEmailModal(data);
+        } else {
+            alert('Error: historial no está definido');
         }
     });
 

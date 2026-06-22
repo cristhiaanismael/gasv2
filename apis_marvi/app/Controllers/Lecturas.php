@@ -32,6 +32,7 @@ class Lecturas extends BaseController
             'lectura_ini'     => $this->request->getPost('lectura_ini'),
             'lectura_fin'     => $this->request->getPost('lectura_fin'),
             'fecha_registro'  => $this->request->getPost('fecha_registro') ?? date('Y-m-d'),
+            'forzar_calculo'  => $this->request->getPost('forzar_calculo') ?? 0,
             'foto'            => ''
         ];
 
@@ -42,6 +43,7 @@ class Lecturas extends BaseController
                 $payload['lectura_ini']     = $json->lectura_ini ?? 0;
                 $payload['lectura_fin']     = $json->lectura_fin ?? 0;
                 $payload['fecha_registro']  = $json->fecha_registro ?? date('Y-m-d');
+                $payload['forzar_calculo']  = $json->forzar_calculo ?? 0;
             }
         }
 
@@ -80,5 +82,46 @@ class Lecturas extends BaseController
         if (!$ultima) return $this->respond(['lectura_fin' => 0, 'periodo' => null]);
 
         return $this->respond($ultima);
+    }
+
+    /**
+     * POST o GET api/lecturas/progreso
+     * Retorna el progreso general por edificio del periodo activo.
+     */
+    public function progreso()
+    {
+        try {
+            $corteModel = new \App\Models\Cortes();
+            $periodo = $corteModel->getActivePeriod();
+
+            $edificioModel = new \App\Models\Edificios();
+            $progreso = $edificioModel->getProgresoLecturas($periodo);
+
+            return $this->respond([
+                'periodo' => $periodo,
+                'progreso' => $progreso
+            ]);
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage());
+        }
+    }
+
+    /**
+     * GET api/lecturas/progreso/edificio/(:num)
+     * Retorna el detalle de cada departamento y su estado de lectura.
+     */
+    public function detalleProgreso($id_edificio)
+    {
+        try {
+            $corteModel = new \App\Models\Cortes();
+            $periodo = $corteModel->getActivePeriod();
+
+            $deptModel = new \App\Models\Departamentos();
+            $detalle = $deptModel->getLecturaStatusByBuilding($id_edificio, $periodo);
+
+            return $this->respond($detalle);
+        } catch (\Exception $e) {
+            return $this->fail($e->getMessage());
+        }
     }
 }

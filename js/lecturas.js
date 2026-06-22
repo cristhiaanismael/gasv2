@@ -29,9 +29,6 @@ class Lectura {
         }
     }
 
-    /**
-     * Obtiene los departamentos de un edificio específico (Petición)
-     */
     async fetchDepartamentos(edificioId) {
         if (!edificioId) return [];
         const url = `${API_BASE_URL}edificio/${edificioId}/departamentos`;
@@ -42,7 +39,14 @@ class Lectura {
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error("Error en API Deptos");
-            return await response.json();
+            const deptos = await response.json();
+            
+            // MAPEO CORRECTOR: Garantizar compatibilidad con TomSelect
+            return deptos.map(d => ({
+                ...d,
+                id_departamento: d.id,
+                num_departamento: d.numero
+            }));
         } catch (error) {
             console.error("Error al cargar departamentos:", error);
             return [];
@@ -118,7 +122,8 @@ class Lectura {
                     depto: '',
                     lectura: '',
                     lecAnterior: 0,
-                    deptId: null
+                    deptId: null,
+                    forzarCalculo: false
                 }
             };
 
@@ -276,6 +281,7 @@ class Lectura {
             item.ocr.lecturaActual = data.lectura_actual || null; // <-- Guardar lectura existente si existe
             item.ocr.saldoAnterior = data.saldo_actual || 0;
             item.ocr.cuotaAdmin = data.cuota_admin || 0;
+            item.ocr.forzarCalculo = false;
             item.status = 'pending'; // Liberar el loader
 
             // Detectar Conflicto de Edificio
@@ -395,6 +401,9 @@ class Lectura {
 
         // Actualizar UI - Ahora sincronizado con Selectores Globales
         $('#inspector-image').attr('src', item.imgUrl);
+        if (window.resetImageZoom) {
+            window.resetImageZoom();
+        }
         $('#inspector-filename').text(item.file);
         
         if (window.Selectors) {
@@ -469,19 +478,42 @@ class Lectura {
 
         if (!isNaN(actual) && actual >= anterior) {
             const m3 = actual - anterior;
-            const lt = m3 * config.factor;
-            const montoGas = lt * config.precioLitro;
-            const totalCaptura = montoGas + config.cuotaAdmin;
-            const totalFinal = totalCaptura + saldoAnterior;
+            const lt = Number((m3 * config.factor).toFixed(3));
+            const montoGas = Number((lt * config.precioLitro).toFixed(3));
+
+            const isZeroConsumption = (actual === anterior);
+            const isForced = item.ocr && item.ocr.forzarCalculo;
+
+            // Set dynamic Cuota Admin based on the condition
+            const activeCuota = (isZeroConsumption && !isForced) ? 0 : (config.cuotaAdmin || 0);
+
+            // Toggle Forzar Cálculo Button
+            const btnForzar = $('#btn-forzar-calculo');
+            if (isZeroConsumption) {
+                btnForzar.removeClass('hidden');
+                if (isForced) {
+                    btnForzar.removeClass('bg-amber-500 hover:bg-amber-600 text-white')
+                             .addClass('bg-green-600 hover:bg-green-700 text-white')
+                             .html('<i data-lucide="check" class="w-3 h-3 mr-1"></i> Forzado');
+                } else {
+                    btnForzar.removeClass('bg-green-600 hover:bg-green-700 text-white')
+                             .addClass('bg-amber-500 hover:bg-amber-600 text-white')
+                             .html('<i data-lucide="zap" class="w-3 h-3 mr-1"></i> Forzar Cálculo');
+                }
+                lucide.createIcons();
+            } else {
+                btnForzar.addClass('hidden');
+                item.ocr.forzarCalculo = false; // Reset if reading changes
+            }
 
             // M3
             $('#consumo-calculado')
-                .text(`${m3.toFixed(2)} m³ cons.`)
+                .text(`${m3} m³ cons.`)
                 .removeClass('text-red-600 bg-red-50 border-red-100')
                 .addClass('text-green-600 bg-green-50 border-green-100');
 
             // Totales
-            const total = montoGas + config.cuotaAdmin + saldoAnterior;
+            const total = montoGas + activeCuota + saldoAnterior;
 
             // Actualizar UI - Dashboard principal
             $('#prev-litros').text(lt.toFixed(2) + ' Lt');
@@ -489,7 +521,7 @@ class Lectura {
             $('#prev-total').text('$' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
             // Actualizar UI - Tooltip Premium
-            $('#tt-cuota').text('$' + config.cuotaAdmin.toFixed(2));
+            $('#tt-cuota').text('$' + activeCuota.toFixed(2));
             
             // Separar saldo en Adeudo y Saldo a Favor
             if (saldoAnterior > 0) {
@@ -504,6 +536,9 @@ class Lectura {
             }
 
         } else {
+            // Hide button if invalid or less
+            $('#btn-forzar-calculo').addClass('hidden');
+
             $('#consumo-calculado')
                 .text(isNaN(actual) ? 'Ingresa lectura' : 'Inválido')
                 .removeClass('text-green-600 bg-green-50 border-green-100')
@@ -538,6 +573,14 @@ class Lectura {
             return;
         }
 
+        // ── Confirmación de Reemplazo (Modo Edición) ──
+        if (item.ocr.lecturaActual) {
+            const confirmar = confirm(`¡Atención!\n\nEl departamento ${item.ocr.depto} ya tiene una lectura registrada en este periodo.\n\n¿Estás seguro que deseas REEMPLAZAR la lectura y foto existentes?`);
+            if (!confirmar) {
+                return; // Se cancela el guardado
+            }
+        }
+
         // ── Estado de carga en el botón ──
         const $btn = $('#btn-guardar');
         const originalHtml = $btn.html();
@@ -552,6 +595,7 @@ class Lectura {
         formData.append('lectura_ini',     item.ocr.lecAnterior);
         formData.append('lectura_fin',     lectura_fin);
         formData.append('fecha_registro',  new Date().toISOString().split('T')[0]);
+        formData.append('forzar_calculo',  item.ocr.forzarCalculo ? 1 : 0);
 
         // Agregar archivo (blobs comprimidos o archivo original si falló comprimir)
         if (item.compressedBlob) {
@@ -647,5 +691,21 @@ class Lectura {
             $('#input-edificio').val(name);
             item.ocr.edificio = name;
         }
+    }
+
+    // --- PETICIONES PARA PANEL DE PROGRESO ---
+
+    async fetchProgresoGeneral() {
+        const url = API_BASE_URL + "lecturas/progreso";
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Error al cargar progreso general");
+        return await response.json();
+    }
+
+    async fetchProgresoEdificio(idEdificio) {
+        const url = API_BASE_URL + "lecturas/progreso/edificio/" + idEdificio;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Error al cargar detalle de progreso del edificio");
+        return await response.json();
     }
 }
